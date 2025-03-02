@@ -4,7 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import ApplicationCard, { Application } from "@/components/applications/ApplicationCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Badge from "@/components/ui/Badge";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { Search } from "lucide-react";
 
 // Sample data - will be replaced with real data later

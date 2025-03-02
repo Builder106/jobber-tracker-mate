@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import Badge from "@/components/ui/Badge";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,9 +55,9 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
             <h3 className="font-medium text-lg leading-tight truncate">{application.position}</h3>
             <p className="text-sm text-muted-foreground truncate">{application.company}</p>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant={application.status}>
+              <StatusBadge variant={application.status}>
                 {statusLabels[application.status]}
-              </Badge>
+              </StatusBadge>
               <span className="text-xs text-muted-foreground">
                 {application.location}
               </span>

@@ -3,7 +3,7 @@ import React from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import Badge from "@/components/ui/Badge";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
 // Sample data - will be replaced with real data later
@@ -93,11 +93,11 @@ const Calendar = () => {
                     >
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium">{event.title}</h3>
-                        <Badge 
+                        <StatusBadge 
                           variant={event.type === "interview" ? "interview" : "default"}
                         >
                           {event.type === "interview" ? "Interview" : "Assessment"}
-                        </Badge>
+                        </StatusBadge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {event.company}
