@@ -10,7 +10,7 @@ interface BadgeProps {
   className?: string;
 }
 
-const Badge = ({ variant = "default", children, className }: BadgeProps) => {
+const StatusBadge = ({ variant = "default", children, className }: BadgeProps) => {
   const variantStyles: Record<BadgeVariant, string> = {
     default: "bg-primary/10 text-primary",
     outline: "border border-border bg-background text-foreground",
@@ -37,4 +37,4 @@ const Badge = ({ variant = "default", children, className }: BadgeProps) => {
   );
 };
 
-export default Badge;
+export default StatusBadge;

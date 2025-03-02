@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, User } from "lucide-react";
 
 const NavItem = ({ 
   href, 
@@ -33,7 +33,10 @@ const NavItem = ({
 const Navbar = () => {
   const location = useLocation();
   const pathname = location.pathname;
-
+  
+  // This would be from an auth context in a real app
+  const isLoggedIn = true; // For demonstration purposes
+  
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -54,13 +57,34 @@ const Navbar = () => {
             <NavItem href="/calendar" active={pathname === "/calendar"}>
               Calendar
             </NavItem>
+            <NavItem href="/pricing" active={pathname === "/pricing"}>
+              Pricing
+            </NavItem>
           </nav>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" className="animate-fade-in">
-            <Plus className="w-4 h-4 mr-1" />
-            New Application
-          </Button>
+        <div className="flex items-center gap-3">
+          {isLoggedIn ? (
+            <>
+              <Button size="sm" className="animate-fade-in">
+                <Plus className="w-4 h-4 mr-1" />
+                New Application
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/profile">
+                  <User className="w-4 h-4" />
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
