@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, User } from "lucide-react";
@@ -32,10 +32,20 @@ const NavItem = ({
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathname = location.pathname;
   
   // This would be from an auth context in a real app
   const isLoggedIn = true; // For demonstration purposes
+  
+  const handleNewApplication = () => {
+    navigate("/applications");
+    // We'll use a small timeout to ensure the page has loaded before opening the form
+    setTimeout(() => {
+      // This will be handled by the Applications page
+      window.dispatchEvent(new CustomEvent("open-new-application-form"));
+    }, 100);
+  };
   
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,7 +75,7 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <>
-              <Button size="sm" className="animate-fade-in">
+              <Button size="sm" className="animate-fade-in" onClick={handleNewApplication}>
                 <Plus className="w-4 h-4 mr-1" />
                 New Application
               </Button>

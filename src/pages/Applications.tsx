@@ -1,11 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import ApplicationCard, { Application } from "@/components/applications/ApplicationCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Search } from "lucide-react";
+import { NewApplicationForm } from "@/components/applications/NewApplicationForm";
+import { Search, Plus } from "lucide-react";
 
 // Sample data - will be replaced with real data later
 const applications: Application[] = [
@@ -68,6 +69,20 @@ const applications: Application[] = [
 const Applications = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isNewFormOpen, setIsNewFormOpen] = useState(false);
+
+  useEffect(() => {
+    // Listen for the custom event from the navbar
+    const handleOpenNewForm = () => {
+      setIsNewFormOpen(true);
+    };
+    
+    window.addEventListener("open-new-application-form", handleOpenNewForm);
+    
+    return () => {
+      window.removeEventListener("open-new-application-form", handleOpenNewForm);
+    };
+  }, []);
 
   const filteredApplications = applications.filter((app) => {
     const matchesFilter = !filter || app.status === filter;
@@ -90,9 +105,18 @@ const Applications = () => {
   return (
     <AppLayout>
       <div className="space-y-8 animate-slide-up">
-        <div>
-          <h1 className="font-semibold tracking-tight">Applications</h1>
-          <p className="text-muted-foreground">Manage and track your job applications</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="font-semibold tracking-tight">Applications</h1>
+            <p className="text-muted-foreground">Manage and track your job applications</p>
+          </div>
+          <Button 
+            onClick={() => setIsNewFormOpen(true)}
+            className="animate-fade-in"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New Application
+          </Button>
         </div>
         
         <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -163,6 +187,15 @@ const Applications = () => {
           )}
         </div>
       </div>
+
+      <NewApplicationForm 
+        open={isNewFormOpen} 
+        onOpenChange={setIsNewFormOpen}
+        onApplicationAdded={() => {
+          // In a real app, this would refresh the applications list
+          console.log("Application added, should refresh list");
+        }}
+      />
     </AppLayout>
   );
 };
