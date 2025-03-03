@@ -38,6 +38,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Application } from "./ApplicationCard";
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -45,7 +46,7 @@ const formSchema = z.object({
   location: z.string().min(1, { message: "Location is required" }),
   status: z.enum(["applied", "interview", "offer", "rejected"]),
   date: z.date(),
-  link: z.string().url({ message: "Please enter a valid URL" }).optional(),
+  link: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,7 +54,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface NewApplicationFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApplicationAdded?: () => void;
+  onApplicationAdded?: (application: Application) => void;
 }
 
 export function NewApplicationForm({
@@ -74,8 +75,16 @@ export function NewApplicationForm({
   });
 
   function onSubmit(data: FormValues) {
-    // In a real application, this would save to a database via an API
-    console.log("Form submitted:", data);
+    // Create a new application object
+    const newApplication: Application = {
+      id: Date.now().toString(), // Generate a temporary ID
+      company: data.company,
+      position: data.position,
+      location: data.location,
+      status: data.status,
+      date: format(data.date, 'MMMM d, yyyy'),
+      link: data.link || undefined,
+    };
     
     // Show success message
     toast.success("Application added successfully!", {
@@ -88,7 +97,7 @@ export function NewApplicationForm({
     
     // Notify parent component
     if (onApplicationAdded) {
-      onApplicationAdded();
+      onApplicationAdded(newApplication);
     }
   }
 

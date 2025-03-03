@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchCompanyLogo } from "@/utils/brandfetch";
 
 export type Application = {
   id: string;
@@ -29,6 +30,34 @@ const statusLabels = {
 };
 
 const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
+  const [logo, setLogo] = useState<string | null>(application.logo || null);
+  const [isLoadingLogo, setIsLoadingLogo] = useState<boolean>(false);
+  const [logoError, setLogoError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      // If we already have a logo, or we've already tried and failed, skip
+      if (logo || logoError || isLoadingLogo) return;
+      
+      setIsLoadingLogo(true);
+      try {
+        const logoUrl = await fetchCompanyLogo(application.company);
+        if (logoUrl) {
+          setLogo(logoUrl);
+        } else {
+          setLogoError(true);
+        }
+      } catch (error) {
+        console.error("Error loading logo:", error);
+        setLogoError(true);
+      } finally {
+        setIsLoadingLogo(false);
+      }
+    };
+
+    loadLogo();
+  }, [application.company, logo, logoError, isLoadingLogo]);
+
   return (
     <Card 
       className={cn(
@@ -39,11 +68,15 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
-            {application.logo ? (
+            {logo ? (
               <img 
-                src={application.logo} 
+                src={logo} 
                 alt={`${application.company} logo`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-1"
+                onError={() => {
+                  setLogoError(true);
+                  setLogo(null);
+                }}
               />
             ) : (
               <div className="text-xl font-bold text-primary">
@@ -51,6 +84,7 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
               </div>
             )}
           </div>
+          
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-lg leading-tight truncate">{application.position}</h3>
             <p className="text-sm text-muted-foreground truncate">{application.company}</p>

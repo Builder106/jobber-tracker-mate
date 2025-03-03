@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import ApplicationCard, { Application } from "@/components/applications/ApplicationCard";
@@ -7,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { NewApplicationForm } from "@/components/applications/NewApplicationForm";
 import { Search, Plus } from "lucide-react";
+import { fetchCompanyLogo } from "@/utils/brandfetch";
 
-// Sample data - will be replaced with real data later
 const applications: Application[] = [
   {
     id: "1",
@@ -70,6 +69,7 @@ const Applications = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewFormOpen, setIsNewFormOpen] = useState(false);
+  const [applicationsList, setApplicationsList] = useState<Application[]>(applications);
 
   useEffect(() => {
     // Listen for the custom event from the navbar
@@ -84,7 +84,7 @@ const Applications = () => {
     };
   }, []);
 
-  const filteredApplications = applications.filter((app) => {
+  const filteredApplications = applicationsList.filter((app) => {
     const matchesFilter = !filter || app.status === filter;
     const matchesSearch = !searchQuery || 
       app.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,11 +95,28 @@ const Applications = () => {
   });
 
   const statusCounts = {
-    all: applications.length,
-    applied: applications.filter(a => a.status === "applied").length,
-    interview: applications.filter(a => a.status === "interview").length,
-    offer: applications.filter(a => a.status === "offer").length,
-    rejected: applications.filter(a => a.status === "rejected").length,
+    all: applicationsList.length,
+    applied: applicationsList.filter(a => a.status === "applied").length,
+    interview: applicationsList.filter(a => a.status === "interview").length,
+    offer: applicationsList.filter(a => a.status === "offer").length,
+    rejected: applicationsList.filter(a => a.status === "rejected").length,
+  };
+
+  const handleApplicationAdded = async (newApplication: Application) => {
+    // In a real app, this would save to a database and refresh the list
+    // For now, we'll just add it to our local state
+    
+    // Try to fetch a logo for the company
+    try {
+      const logoUrl = await fetchCompanyLogo(newApplication.company);
+      if (logoUrl) {
+        newApplication.logo = logoUrl;
+      }
+    } catch (error) {
+      console.error("Error fetching logo for new application:", error);
+    }
+    
+    setApplicationsList([newApplication, ...applicationsList]);
   };
 
   return (
@@ -191,10 +208,7 @@ const Applications = () => {
       <NewApplicationForm 
         open={isNewFormOpen} 
         onOpenChange={setIsNewFormOpen}
-        onApplicationAdded={() => {
-          // In a real app, this would refresh the applications list
-          console.log("Application added, should refresh list");
-        }}
+        onApplicationAdded={handleApplicationAdded}
       />
     </AppLayout>
   );
