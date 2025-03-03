@@ -52,7 +52,7 @@ const Navbar = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="font-medium text-lg">
-            JobTracker
+            CareerClutch
           </Link>
           <nav className="hidden md:flex items-center gap-1 ml-6">
             <NavItem href="/" active={pathname === "/"}>
