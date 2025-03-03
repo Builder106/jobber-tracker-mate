@@ -3,7 +3,16 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus, User } from "lucide-react";
+import { Plus, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const NavItem = ({ 
   href, 
@@ -34,9 +43,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
-  
-  // This would be from an auth context in a real app
-  const isLoggedIn = true; // For demonstration purposes
+  const { user, logout } = useAuth();
   
   const handleNewApplication = () => {
     navigate("/applications");
@@ -45,6 +52,11 @@ const Navbar = () => {
       // This will be handled by the Applications page
       window.dispatchEvent(new CustomEvent("open-new-application-form"));
     }, 100);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
   
   return (
@@ -73,17 +85,30 @@ const Navbar = () => {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          {isLoggedIn ? (
+          {user ? (
             <>
               <Button size="sm" className="animate-fade-in" onClick={handleNewApplication}>
                 <Plus className="w-4 h-4 mr-1" />
                 New Application
               </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/profile">
-                  <User className="w-4 h-4" />
-                </Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="rounded-full w-9 h-9 p-0">
+                    <User className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>

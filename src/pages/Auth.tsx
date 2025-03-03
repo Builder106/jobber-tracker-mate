@@ -4,43 +4,59 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Github, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/layout/AppLayout";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+const authSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters")
+});
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const plan = searchParams.get("plan");
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { login } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof authSchema>>({
+    resolver: zodResolver(authSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  });
+
+  const onSubmit = async (values: z.infer<typeof authSchema>) => {
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      toast({
-        title: isLogin ? "Welcome back!" : "Account created successfully!",
-        description: isLogin 
-          ? "You've been logged in to your account." 
-          : "Check your email to confirm your account.",
-      });
-      
+    try {
+      await login(values.email, values.password);
       navigate("/applications");
-    }, 1500);
+    } catch (error) {
+      console.error("Authentication error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center items-center p-4 bg-muted/30">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+    <AppLayout className="flex justify-center items-center">
+      <div className="w-full max-w-md p-4">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             {isLogin ? "Welcome back" : "Create an account"}
@@ -52,117 +68,122 @@ const Auth = () => {
           </p>
         </div>
 
-        <Card>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email" 
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className="text-sm font-medium">
-                      Password
-                    </label>
-                    {isLogin && (
-                      <a 
-                        href="#" 
-                        className="text-xs text-primary hover:underline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toast({
-                            title: "Password reset email sent",
-                            description: "Check your inbox for instructions.",
-                          });
-                        }}
-                      >
-                        Forgot password?
-                      </a>
+        <Card className="mt-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email" 
+                            placeholder="name@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Password</FormLabel>
+                          {isLogin && (
+                            <Button 
+                              variant="link" 
+                              className="h-auto p-0 text-xs"
+                              type="button"
+                            >
+                              Forgot password?
+                            </Button>
+                          )}
+                        </div>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading 
+                      ? "Loading..." 
+                      : isLogin ? "Sign In" : "Create Account"}
+                  </Button>
+                  
                   <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button variant="outline" type="button" disabled={isLoading}>
+                      <Github className="mr-2 h-4 w-4" />
+                      GitHub
+                    </Button>
+                    <Button variant="outline" type="button" disabled={isLoading}>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Google
+                    </Button>
                   </div>
                 </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading 
-                    ? "Loading..." 
-                    : isLogin ? "Sign In" : "Create Account"}
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" type="button" disabled={isLoading}>
-                    <Github className="mr-2 h-4 w-4" />
-                    GitHub
-                  </Button>
-                  <Button variant="outline" type="button" disabled={isLoading}>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Google
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <div className="text-sm text-center text-muted-foreground">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  <Button
+                    variant="link"
+                    className="h-auto p-0"
+                    type="button"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      form.reset();
+                    }}
+                  >
+                    {isLogin ? "Sign up" : "Sign in"}
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <div className="text-sm text-center text-muted-foreground">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <a
-                  href="#"
-                  className="underline text-primary"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsLogin(!isLogin);
-                  }}
-                >
-                  {isLogin ? "Sign up" : "Sign in"}
-                </a>
-              </div>
-              {plan && (
-                <div className="text-xs text-center text-muted-foreground">
-                  You're signing up for the <span className="font-medium">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span> plan. 
-                  You can change this later.
-                </div>
-              )}
-            </CardFooter>
-          </form>
+                {plan && (
+                  <div className="text-xs text-center text-muted-foreground">
+                    You're signing up for the <span className="font-medium">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span> plan. 
+                    You can change this later.
+                  </div>
+                )}
+              </CardFooter>
+            </form>
+          </Form>
         </Card>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
