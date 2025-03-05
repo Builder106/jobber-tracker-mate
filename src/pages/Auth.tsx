@@ -8,7 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { BsMicrosoft } from "react-icons/bs";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/contexts/AuthContext";
-import AppLayout from "@/components/layout/AppLayout";
+import AuthLayout from "@/components/layout/AuthLayout";
 import { 
   Form,
   FormControl,
@@ -21,22 +21,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-const authSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  ...((!isLogin) && {
-    confirmPassword: z.string()
-  })
-}).refine(data => {
-  if (!isLogin) {
-    return data.password === data.confirmPassword;
-  }
-  return true;
-}, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"]
-});
-
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const plan = searchParams.get("plan");
@@ -46,6 +30,22 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const authSchema = z.object({
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    ...((!isLogin) && {
+      confirmPassword: z.string()
+    })
+  }).refine(data => {
+    if (!isLogin) {
+      return data.password === data.confirmPassword;
+    }
+    return true;
+  }, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"]
+  });
 
   const form = useForm<z.infer<typeof authSchema> & { confirmPassword?: string }>({
     resolver: zodResolver(authSchema),
@@ -69,7 +69,7 @@ const Auth = () => {
   };
 
   return (
-    <AppLayout className="flex justify-center items-center">
+    <AuthLayout className="flex justify-center items-center">
       <div className="w-full max-w-md p-4">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -197,7 +197,7 @@ const Auth = () => {
           </Form>
         </Card>
       </div>
-    </AppLayout>
+    </AuthLayout>
   );
 };
 

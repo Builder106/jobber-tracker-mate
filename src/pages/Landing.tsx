@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight,
   BarChart2,
@@ -10,11 +11,12 @@ import {
   CheckCircle2,
   Clock,
   Layout,
-  CheckCircle,
-  ArrowUpRight
+  ArrowUpRight,
+  Target,
+  Rocket,
 } from "lucide-react";
 
-const Landing = () => {
+const Landing = (): JSX.Element => {
   const navigate = useNavigate();
 
   const features = [
@@ -45,12 +47,25 @@ const Landing = () => {
     }
   ];
 
-  const stats = [
-    { value: "85%", label: "Success Rate" },
-    { value: "24h", label: "Avg. Response Time" },
-    { value: "2x", label: "Interview Rate" },
-    { value: "4.9", label: "User Rating" }
+  const steps = [
+    {
+      number: "1",
+      title: "Create Account",
+      description: "Sign up in seconds and customize your job search preferences"
+    },
+    {
+      number: "2",
+      title: "Track Applications",
+      description: "Add and organize your job applications with our intuitive interface"
+    },
+    {
+      number: "3",
+      title: "Get Insights",
+      description: "Receive personalized analytics and tips to improve your success rate"
+    }
   ];
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +73,7 @@ const Landing = () => {
       <div className="bg-primary/10 text-primary px-4 py-2 text-center text-sm font-medium">
         <span className="inline-flex items-center">
           🎉 New: AI-powered resume analysis now available
-          <Button variant="link" className="h-auto p-0 ml-2" onClick={() => navigate("/signup")}>
+          <Button variant="link" className="h-auto p-0 ml-2" onClick={() => navigate("/auth")}>
             Try it free <ArrowUpRight className="h-3 w-3 ml-1" />
           </Button>
         </span>
@@ -69,72 +84,105 @@ const Landing = () => {
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
         </div>
+        <div className="absolute inset-x-0 top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:top-80">
+          <div className="relative right-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:right-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+        </div>
         
-        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div className="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
           <div className="text-center">
-            <Badge variant="outline" className="mb-4 animate-fade-in">
-              The Job Search Assistant
-            </Badge>
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 animate-fade-in">
+              <Rocket className="h-4 w-4" />
+              <span className="text-sm font-medium">Supercharge Your Job Search</span>
+            </div>
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/50 animate-slide-up">
-              Land Your Dream Job Faster
+              Your Personal Job Search Command Center
             </h1>
             <p className="text-xl leading-8 text-muted-foreground mb-8 animate-slide-up delay-100">
-              The all-in-one platform that helps you organize your job search, track applications, and increase your interview success rate by <span className="font-semibold text-foreground">2x</span>.
+              Stop juggling spreadsheets and emails. Start managing your entire job search journey in one powerful, intuitive platform designed to help you land your dream role faster.
             </p>
-            <div className="flex items-center justify-center gap-4 animate-slide-up delay-200">
-              <Button size="lg" onClick={() => navigate("/signup")} className="shadow-lg hover:shadow-xl transition-shadow">
-                Start Free Trial
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up delay-200">
+              <Button size="lg" onClick={() => navigate("/auth")} className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90">
+                Get Started Now
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="outline" size="lg" onClick={() => navigate("/auth")}>
-                See Demo
+              <Button size="lg" variant="outline" onClick={() => navigate("/features")} className="w-full sm:w-auto">
+                Explore Features
+                <Target className="ml-2 h-4 w-4" />
               </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground animate-fade-in delay-300">
-              No credit card required • Free 14-day trial • Cancel anytime
+            <p className="mt-6 text-sm text-muted-foreground animate-fade-in delay-300">
+              ✨ No credit card required • Free 14-day trial • Cancel anytime
             </p>
           </div>
         </div>
       </div>
 
-      {/* Social Proof */}
-      <div className="border-y bg-muted/50">
-        <div className="container py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {stats.map((stat, index) => (
-            <div key={index} className="space-y-2">
-              <div className="text-3xl font-bold text-primary">{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
+
+
+      {/* How it Works Section */}
+      <div className="py-24 sm:py-32 bg-muted/30">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <Badge variant="outline" className="mb-4">
+              Simple Process
+            </Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+              How CareerClutch Works
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Get started in minutes and streamline your entire job search process
+            </p>
+          </div>
+          
+          <div className="mx-auto max-w-5xl">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {steps.map((step, index) => (
+                <div key={index} className="relative">
+                  {index < steps.length - 1 && (
+                    <div className="absolute hidden md:block top-12 left-[60%] w-full h-0.5 bg-primary/30" />
+                  )}
+                  <div className="relative flex flex-col items-center p-6 bg-background rounded-lg shadow-lg">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground text-xl font-bold mb-4">
+                      {step.number}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                    <p className="text-center text-muted-foreground">{step.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
       {/* Features Section */}
-      <div className="py-24 sm:py-32">
+      <div className="py-24 sm:py-32 bg-muted/10">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
-            <Badge variant="outline" className="mb-4">
-              Powerful Features
-            </Badge>
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+              <Target className="h-4 w-4" />
+              <span className="text-sm font-medium">Built for Job Seekers</span>
+            </div>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-              Everything you need to succeed
+              Your All-in-One Job Search Toolkit
             </h2>
             <p className="text-lg text-muted-foreground">
-              Our comprehensive toolkit helps you stay organized and focused on landing your dream role
+              Every tool you need to organize, track, and succeed in your job search journey
             </p>
           </div>
           
-          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <Card
                 key={index}
-                className="relative p-6 hover:-translate-y-1 transition-all duration-200 hover:shadow-lg"
+                className="group relative overflow-hidden p-6 hover:-translate-y-1 transition-all duration-200 hover:shadow-lg border-primary/10 hover:border-primary/30"
               >
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
+                <div className="absolute bottom-0 left-0 h-1 w-0 bg-primary transition-all duration-300 group-hover:w-full" />
               </Card>
             ))}
           </div>
@@ -142,36 +190,39 @@ const Landing = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8">
-        <div className="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl">
-          <div className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-primary to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" />
+      <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 bg-primary/5">
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px)] bg-[size:14px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         </div>
-        
-        <Card className="mx-auto max-w-3xl text-center p-8 shadow-lg">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Ready to transform your job search?
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
+            Ready to Transform Your Job Search?
           </h2>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground mb-8">
-            Join thousands of job seekers who have streamlined their job search and landed their dream roles faster.
+          <p className="text-lg text-muted-foreground mb-8">
+            Join thousands of job seekers who have streamlined their job search process and landed their dream roles faster with CareerClutch.
           </p>
-          <div className="flex items-center justify-center gap-x-6">
-            <Button size="lg" onClick={() => navigate("/signup")} className="shadow-lg">
-              Start Free Trial
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" onClick={() => navigate("/auth")} className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+              Start Your Free Trial
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" size="lg" onClick={() => navigate("/pricing")}>
-              View pricing
-            </Button>
           </div>
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <CheckCircle className="h-4 w-4 text-primary" />
-            14-day free trial
-            <CheckCircle className="h-4 w-4 text-primary ml-4" />
-            No credit card required
-            <CheckCircle className="h-4 w-4 text-primary ml-4" />
-            Cancel anytime
+          <Separator className="my-8" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12">
+            <div className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-primary mb-2">14 Days</div>
+              <div className="text-sm text-muted-foreground">Free Trial</div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-primary mb-2">5 Minutes</div>
+              <div className="text-sm text-muted-foreground">Setup Time</div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-primary mb-2">24/7</div>
+              <div className="text-sm text-muted-foreground">Support</div>
+            </div>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
