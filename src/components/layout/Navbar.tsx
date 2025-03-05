@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -45,15 +45,6 @@ const Navbar = () => {
   const pathname = location.pathname;
   const { user, logout } = useAuth();
   
-  const handleNewApplication = () => {
-    navigate("/applications");
-    // We'll use a small timeout to ensure the page has loaded before opening the form
-    setTimeout(() => {
-      // This will be handled by the Applications page
-      window.dispatchEvent(new CustomEvent("open-new-application-form"));
-    }, 100);
-  };
-
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -87,10 +78,6 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <Button size="sm" className="animate-fade-in" onClick={handleNewApplication}>
-                <Plus className="w-4 h-4 mr-1" />
-                New Application
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="rounded-full w-9 h-9 p-0">

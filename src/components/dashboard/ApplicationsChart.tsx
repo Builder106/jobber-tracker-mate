@@ -3,17 +3,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-// Sample data - will be replaced with real data later
-const data = [
-  { name: "Jan", count: 4 },
-  { name: "Feb", count: 6 },
-  { name: "Mar", count: 8 },
-  { name: "Apr", count: 12 },
-  { name: "May", count: 8 },
-  { name: "Jun", count: 14 },
-];
+interface ApplicationsChartProps {
+  data: { name: string; count: number }[];
+}
 
-const ApplicationsChart = () => {
+const ApplicationsChart = ({ data }: ApplicationsChartProps) => {
   return (
     <Card className="col-span-3">
       <CardHeader>
