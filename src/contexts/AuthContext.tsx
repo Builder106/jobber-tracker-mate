@@ -1,12 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-}
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -24,33 +20,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Check if user is logged in from Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API request
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Mock user for demo
-      const user = { id: '1', email };
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
+      if (error) throw error;
       
       toast({
         title: "Welcome back!",
         description: "You've been logged in to your account."
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive"
       });
       throw error;
@@ -62,22 +62,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API request
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
       
-      // Mock user for demo
-      const user = { id: '1', email };
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
+      if (error) throw error;
       
       toast({
         title: "Account created successfully!",
-        description: "Welcome to CareerClutch."
+        description: "Please check your email for verification link."
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Signup failed",
-        description: "Please try again with a different email.",
+        description: error.message || "Please try again with a different email.",
         variant: "destructive"
       });
       throw error;
@@ -86,13 +85,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    toast({
-      title: "Logged out",
-      description: "You've been successfully logged out."
-    });
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out",
+        description: "You've been successfully logged out."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to log out.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
