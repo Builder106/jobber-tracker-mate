@@ -1,11 +1,9 @@
-
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -31,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { CalendarIcon, LinkIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -40,8 +38,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Application } from "./ApplicationCard";
-import { supabase } from "@/lib/supabase";
-import { useSession } from "@supabase/auth-helpers-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -55,18 +52,19 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface NewApplicationFormProps {
+interface EditApplicationFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApplicationAdded?: (application: Application) => void;
+  application: Application | null;
+  onApplicationUpdated?: (application: Application) => void;
 }
 
-export function NewApplicationForm({
+export function EditApplicationForm({
   open,
   onOpenChange,
-  onApplicationAdded,
-}: NewApplicationFormProps) {
-  const session = useSession();
+  application,
+  onApplicationUpdated,
+}: EditApplicationFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -80,48 +78,37 @@ export function NewApplicationForm({
     },
   });
 
-  // Load draft from localStorage when form opens
-  useEffect(() => {
-    if (open) {
+  // Update form values when application changes
+  React.useEffect(() => {
+    if (application && open) {
+      // Parse the date string to a Date object
+      let dateObj: Date;
       try {
-        const savedDraft = localStorage.getItem('applicationDraft');
-        if (savedDraft) {
-          const draft = JSON.parse(savedDraft);
-          // Convert the date string back to a Date object
-          if (draft.date) {
-            draft.date = new Date(draft.date);
-          }
-          form.reset(draft);
-        }
+        // Try to parse with format "MMMM d, yyyy"
+        dateObj = parse(application.date, 'MMMM d, yyyy', new Date());
       } catch (error) {
-        console.error('Error loading draft:', error);
+        // Fallback to current date if parsing fails
+        dateObj = new Date();
       }
+
+      form.reset({
+        company: application.company,
+        position: application.position,
+        location: application.location,
+        status: application.status,
+        date: dateObj,
+        link: application.link || "",
+        notes: application.notes || "",
+      });
     }
-  }, [open, form]);
+  }, [application, open, form]);
 
-  // Save form data to localStorage when it changes
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (open && Object.values(value).some(val => val)) {
-        try {
-          // Convert date to ISO string for storage
-          const dataToSave = {...value};
-          if (dataToSave.date) {
-            dataToSave.date = dataToSave.date.toISOString();
-          }
-          localStorage.setItem('applicationDraft', JSON.stringify(dataToSave));
-        } catch (error) {
-          console.error('Error saving draft:', error);
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, open]);
+  function onSubmit(data: FormValues) {
+    if (!application) return;
 
-  async function onSubmit(data: FormValues) {
-    // Create a new application object
-    const newApplication: Application = {
-      id: Date.now().toString(), // This will be replaced by Supabase
+    // Create an updated application object
+    const updatedApplication: Application = {
+      ...application,
       company: data.company,
       position: data.position,
       location: data.location,
@@ -129,26 +116,20 @@ export function NewApplicationForm({
       date: format(data.date, 'MMMM d, yyyy'),
       link: data.link || undefined,
       notes: data.notes || undefined,
-      user_id: session?.user?.id,
-      created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
     
     // Show success message
-    toast.success("Application added successfully!", {
+    toast.success("Application updated successfully!", {
       description: `${data.position} at ${data.company}`,
     });
     
-    // Reset form and close dialog
-    form.reset();
+    // Close dialog
     onOpenChange(false);
     
-    // Clear the draft from localStorage
-    localStorage.removeItem('applicationDraft');
-    
     // Notify parent component
-    if (onApplicationAdded) {
-      onApplicationAdded(newApplication);
+    if (onApplicationUpdated) {
+      onApplicationUpdated(updatedApplication);
     }
   }
 
@@ -156,9 +137,9 @@ export function NewApplicationForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Application</DialogTitle>
+          <DialogTitle>Edit Application</DialogTitle>
           <DialogDescription>
-            Track a new job application you've submitted.
+            Update the details of your job application.
           </DialogDescription>
         </DialogHeader>
         
@@ -215,6 +196,7 @@ export function NewApplicationForm({
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -315,20 +297,11 @@ export function NewApplicationForm({
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => {
-                  // Ask for confirmation if form has been filled out
-                  if (Object.values(form.getValues()).some(val => val && val !== "")) {
-                    if (window.confirm("Are you sure you want to cancel? Your draft will be saved.")) {
-                      onOpenChange(false);
-                    }
-                  } else {
-                    onOpenChange(false);
-                  }
-                }}
+                onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Application</Button>
+              <Button type="submit">Update Application</Button>
             </DialogFooter>
           </form>
         </Form>

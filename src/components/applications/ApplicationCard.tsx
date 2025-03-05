@@ -2,9 +2,19 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, ExternalLink, MoreVertical, Edit, Trash2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchCompanyLogo } from "@/utils/brandfetch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export type Application = {
   id: string;
@@ -15,11 +25,18 @@ export type Application = {
   date: string;
   logo?: string;
   link?: string;
+  notes?: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 interface ApplicationCardProps {
   application: Application;
   className?: string;
+  onEdit?: (application: Application) => void;
+  onDelete?: (id: string) => void;
+  onStatusChange?: (id: string, newStatus: Application['status']) => void;
 }
 
 const statusLabels = {
@@ -29,7 +46,13 @@ const statusLabels = {
   rejected: "Rejected",
 };
 
-const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
+const ApplicationCard = ({ 
+  application, 
+  className, 
+  onEdit, 
+  onDelete,
+  onStatusChange 
+}: ApplicationCardProps) => {
   const [logo, setLogo] = useState<string | null>(application.logo || null);
   const [isLoadingLogo, setIsLoadingLogo] = useState<boolean>(false);
   const [logoError, setLogoError] = useState<boolean>(false);
@@ -58,14 +81,59 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
     loadLogo();
   }, [application.company, logo, logoError, isLoadingLogo]);
 
+  const handleStatusChange = async (newStatus: Application['status']) => {
+    if (onStatusChange) {
+      onStatusChange(application.id, newStatus);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(application.id);
+    }
+  };
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(application);
+    }
+  };
+
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 hover:shadow-card card-hover border",
+        "overflow-hidden transition-all duration-300 hover:shadow-card card-hover border group",
         className
       )}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-6 relative">
+        <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive" 
+                onClick={handleDelete}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-md bg-secondary flex items-center justify-center overflow-hidden">
             {logo ? (
@@ -89,15 +157,49 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
             <h3 className="font-medium text-lg leading-tight truncate">{application.position}</h3>
             <p className="text-sm text-muted-foreground truncate">{application.company}</p>
             <div className="flex items-center gap-2 mt-1">
-              <StatusBadge variant={application.status}>
-                {statusLabels[application.status]}
-              </StatusBadge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
+                    <StatusBadge variant={application.status}>
+                      {statusLabels[application.status]}
+                    </StatusBadge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => handleStatusChange("applied")}>
+                    <StatusBadge variant="applied" className="mr-2">Applied</StatusBadge>
+                    Set as Applied
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange("interview")}>
+                    <StatusBadge variant="interview" className="mr-2">Interview</StatusBadge>
+                    Set as Interview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange("offer")}>
+                    <StatusBadge variant="offer" className="mr-2">Offer</StatusBadge>
+                    Set as Offer
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange("rejected")}>
+                    <StatusBadge variant="rejected" className="mr-2">Rejected</StatusBadge>
+                    Set as Rejected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <span className="text-xs text-muted-foreground">
                 {application.location}
               </span>
             </div>
           </div>
         </div>
+        
+        {application.notes && (
+          <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
+            <div className="flex items-center gap-1 mb-1">
+              <MessageSquare className="h-3 w-3" />
+              <span className="text-xs font-medium">Notes</span>
+            </div>
+            <p className="line-clamp-2">{application.notes}</p>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="px-6 py-4 bg-muted/30 border-t flex items-center text-xs text-muted-foreground">
         <div className="flex items-center">
@@ -109,9 +211,10 @@ const ApplicationCard = ({ application, className }: ApplicationCardProps) => {
             href={application.link} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="ml-auto text-primary hover:underline"
+            className="ml-auto flex items-center text-primary hover:underline"
           >
-            View Job
+            <span>View Job</span>
+            <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         )}
       </CardFooter>
