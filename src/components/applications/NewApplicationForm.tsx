@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CalendarIcon, LinkIcon } from "lucide-react";
+import { CalendarIcon, LinkIcon, MapPinIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -42,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { Application } from "./ApplicationCard";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@supabase/auth-helpers-react";
+import { fetchLocationSuggestions, LocationSuggestion } from "@/utils/locationSearch";
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -79,6 +79,33 @@ export function NewApplicationForm({
       notes: "",
     },
   });
+
+  const [locationQuery, setLocationQuery] = React.useState(form.getValues("location") || "");
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (locationQuery.length >= 2) {
+        setIsLoadingLocations(true);
+        try {
+          const suggestions = await fetchLocationSuggestions(locationQuery);
+          setLocationSuggestions(suggestions);
+        } catch (error) {
+          console.error("Error fetching location suggestions:", error);
+          setLocationSuggestions([]);
+        } finally {
+          setIsLoadingLocations(false);
+        }
+      } else {
+        setLocationSuggestions([]);
+      }
+    };
+
+    // Debounce the API call to avoid making too many requests
+    const timeoutId = setTimeout(fetchLocations, 300);
+    return () => clearTimeout(timeoutId);
+  }, [locationQuery]);
 
   // Load draft from localStorage when form opens
   useEffect(() => {
@@ -156,10 +183,8 @@ export function NewApplicationForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Application</DialogTitle>
-          <DialogDescription>
-            Track a new job application you've submitted.
-          </DialogDescription>
+          <DialogTitle>Add New Job Application</DialogTitle>
+          <DialogDescription>Please fill out the details below to add a new job application record.</DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
@@ -199,8 +224,42 @@ export function NewApplicationForm({
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="City, State" {...field} />
+                    <div className="relative">
+                      <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search or enter a location"
+                        value={locationQuery}
+                        className="pl-10"
+                        onChange={(e) => {
+                          setLocationQuery(e.target.value);
+                          field.onChange(e.target.value);
+                        }}
+                      />
+                      {isLoadingLocations && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
+                  {locationQuery && locationSuggestions.length > 0 && (
+                    <div className="mt-1 border rounded shadow-sm max-h-60 overflow-auto z-50">
+                      {locationSuggestions.map(loc => (
+                        <div
+                          key={loc.placeId || loc.description}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-start"
+                          onClick={() => {
+                            field.onChange(loc.description);
+                            setLocationQuery(loc.description);
+                            setLocationSuggestions([]);
+                          }}
+                        >
+                          <MapPinIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          <span>{loc.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -318,7 +377,7 @@ export function NewApplicationForm({
                 onClick={() => {
                   // Ask for confirmation if form has been filled out
                   if (Object.values(form.getValues()).some(val => val && val !== "")) {
-                    if (window.confirm("Are you sure you want to cancel? Your draft will be saved.")) {
+                    if (window.confirm("Are you sure you want to cancel? Your progress will be saved as a draft and can be resumed later.")) {
                       onOpenChange(false);
                     }
                   } else {
@@ -328,7 +387,9 @@ export function NewApplicationForm({
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Application</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Adding..." : "Add Application"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

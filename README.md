@@ -52,13 +52,15 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (Authentication & Database)
+- Google Places API (Location search)
 
 ## How can I deploy this project?
 
@@ -67,3 +69,18 @@ Simply open [Lovable](https://lovable.dev/projects/5d431ec9-f223-48b8-93aa-92927
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
+## Setting up API Keys
+
+### Google Places API
+
+To enable enhanced location search functionality, you need to set up a Google Places API key:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the "Places API" from the API Library
+4. Create an API key from the Credentials page
+5. Add the API key to your `.env` file as `VITE_GOOGLE_PLACES_API_KEY=your-api-key`
+6. (Optional) Restrict the API key to only the Places API and your domain for security
+
+If you don't set up the Google Places API key, the application will fall back to using the Teleport API for location search, which has more limited functionality.
