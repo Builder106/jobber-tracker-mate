@@ -1,80 +1,102 @@
-# Welcome to your Lovable project
+# Jobber Tracker Mate
 
-## Project info
+A comprehensive job application tracking system to help job seekers organize their job search process, track applications, and manage interviews.
 
-**URL**: https://lovable.dev/projects/5d431ec9-f223-48b8-93aa-92927136366e
+![Jobber Tracker Mate](https://github.com/username/jobber-tracker-mate/raw/main/public/screenshot.png)
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Dashboard**: Get an overview of your job search progress with visual analytics
+- **Application Tracking**: Log and monitor all your job applications in one place
+- **Calendar Integration**: Keep track of interviews and important deadlines
+- **Profile Management**: Maintain your professional profile information
+- **Authentication**: Secure login with email/password, Microsoft, or Google accounts
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5d431ec9-f223-48b8-93aa-92927136366e) and start prompting.
+- **Frontend**: React, TypeScript, Vite
+- **UI Components**: shadcn/ui, Tailwind CSS
+- **State Management**: React Context API, React Query
+- **Authentication & Database**: Supabase
+- **Location Search**: Google Places API
+- **Charts & Visualizations**: Recharts
+- **Form Handling**: React Hook Form, Zod
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v16 or higher)
+- npm or yarn package manager
+- Supabase account (for authentication and database)
+- Google Cloud account (for Places API - optional)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository
+   ```sh
+   git clone https://github.com/username/jobber-tracker-mate.git
+   cd jobber-tracker-mate
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Set up environment variables
+   - Copy the `.env.example` file to `.env`
+   - Fill in the required environment variables:
+     ```
+     VITE_SUPABASE_URL=your-project-url
+     VITE_SUPABASE_ANON_KEY=your-anon-key
+     
+     # OAuth Provider Settings (optional)
+     VITE_MICROSOFT_CLIENT_ID=your-microsoft-client-id
+     VITE_GOOGLE_CLIENT_ID=your-google-client-id
+     
+     # API Keys (optional)
+     VITE_GOOGLE_PLACES_API_KEY=your-google-places-api-key
+     ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Start the development server
+   ```sh
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+5. Open your browser and navigate to `http://localhost:5173`
 
-**Edit a file directly in GitHub**
+## Setting Up Authentication
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Supabase Configuration
 
-**Use GitHub Codespaces**
+1. Create a new project in [Supabase](https://supabase.com/)
+2. Get your project URL and anon key from the project settings
+3. Add these values to your `.env` file
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### OAuth Providers (Optional)
 
-## What technologies are used for this project?
+#### Microsoft OAuth
 
-This project is built with:
+1. Register a new application in the [Microsoft Azure Portal](https://portal.azure.com/)
+2. Set the redirect URL to `https://[YOUR_SUPABASE_PROJECT].supabase.co/auth/v1/callback`
+3. Get your client ID and add it to your `.env` file
+4. Configure the Microsoft OAuth provider in your Supabase dashboard
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase (Authentication & Database)
-- Google Places API (Location search)
+#### Google OAuth
 
-## How can I deploy this project?
+1. Create OAuth credentials in the [Google Cloud Console](https://console.cloud.google.com/)
+2. Set the authorized redirect URI to `https://[YOUR_SUPABASE_PROJECT].supabase.co/auth/v1/callback`
+3. Get your client ID and add it to your `.env` file
+4. Configure the Google OAuth provider in your Supabase dashboard
 
-Simply open [Lovable](https://lovable.dev/projects/5d431ec9-f223-48b8-93aa-92927136366e) and click on Share -> Publish.
+## Setting Up Google Places API (Optional)
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
-
-## Setting up API Keys
-
-### Google Places API
-
-To enable enhanced location search functionality, you need to set up a Google Places API key:
+To enable enhanced location search functionality:
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
@@ -83,4 +105,40 @@ To enable enhanced location search functionality, you need to set up a Google Pl
 5. Add the API key to your `.env` file as `VITE_GOOGLE_PLACES_API_KEY=your-api-key`
 6. (Optional) Restrict the API key to only the Places API and your domain for security
 
-If you don't set up the Google Places API key, the application will fall back to using the Teleport API for location search, which has more limited functionality.
+## Deployment
+
+### Build for Production
+
+```sh
+npm run build
+# or
+yarn build
+```
+
+The build artifacts will be stored in the `dist/` directory, ready to be deployed to any static hosting service.
+
+### Recommended Hosting Options
+
+- [Vercel](https://vercel.com/)
+- [Netlify](https://www.netlify.com/)
+- [GitHub Pages](https://pages.github.com/)
+- [Cloudflare Pages](https://pages.cloudflare.com/)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful UI components
+- [Supabase](https://supabase.com/) for authentication and database services
+- [Vite](https://vitejs.dev/) for the fast development experience
+- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
