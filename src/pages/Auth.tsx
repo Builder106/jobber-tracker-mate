@@ -4,7 +4,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Github, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { BsMicrosoft } from "react-icons/bs";
+import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
 import { 
@@ -21,7 +23,18 @@ import { useForm } from "react-hook-form";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters")
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  ...((!isLogin) && {
+    confirmPassword: z.string()
+  })
+}).refine(data => {
+  if (!isLogin) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
 });
 
 const Auth = () => {
@@ -34,11 +47,12 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof authSchema>>({
+  const form = useForm<z.infer<typeof authSchema> & { confirmPassword?: string }>({
     resolver: zodResolver(authSchema),
     defaultValues: {
       email: "",
-      password: ""
+      password: "",
+      confirmPassword: ""
     }
   });
 
@@ -147,11 +161,11 @@ const Auth = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <Button variant="outline" type="button" disabled={isLoading}>
-                      <Github className="mr-2 h-4 w-4" />
-                      GitHub
+                      <BsMicrosoft className="mr-2 h-4 w-4" />
+                      Microsoft
                     </Button>
                     <Button variant="outline" type="button" disabled={isLoading}>
-                      <Mail className="mr-2 h-4 w-4" />
+                      <FcGoogle className="mr-2 h-4 w-4" />
                       Google
                     </Button>
                   </div>

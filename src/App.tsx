@@ -10,7 +10,6 @@ import Calendar from "./pages/Calendar";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
-import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
 
@@ -40,7 +39,6 @@ const App = () => {
             {/* Public routes */}
             <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/pricing" element={<Pricing />} />
 
             {/* Protected routes */}
