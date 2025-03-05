@@ -7,82 +7,58 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { NewApplicationForm } from "@/components/applications/NewApplicationForm";
 import { Search, Plus } from "lucide-react";
 import { fetchCompanyLogo } from "@/utils/brandfetch";
+import { supabase } from '@/utils/supabaseClient';
+import { useSession } from '@supabase/auth-helpers-react';
 
-const applications: Application[] = [
-  {
-    id: "1",
-    company: "Apple Inc.",
-    position: "Frontend Developer",
-    location: "Cupertino, CA",
-    status: "applied",
-    date: "June 12, 2023",
-    link: "#",
-  },
-  {
-    id: "2",
-    company: "Google",
-    position: "UX Designer",
-    location: "Mountain View, CA",
-    status: "interview",
-    date: "June 8, 2023",
-    link: "#",
-  },
-  {
-    id: "3",
-    company: "Microsoft",
-    position: "Software Engineer",
-    location: "Redmond, WA",
-    status: "rejected",
-    date: "May 28, 2023",
-    link: "#",
-  },
-  {
-    id: "4",
-    company: "Amazon",
-    position: "Product Manager",
-    location: "Seattle, WA",
-    status: "offer",
-    date: "June 15, 2023",
-    link: "#",
-  },
-  {
-    id: "5",
-    company: "Meta",
-    position: "React Developer",
-    location: "Menlo Park, CA",
-    status: "applied",
-    date: "June 1, 2023",
-    link: "#",
-  },
-  {
-    id: "6",
-    company: "Netflix",
-    position: "Full Stack Engineer",
-    location: "Los Gatos, CA",
-    status: "interview",
-    date: "May 20, 2023",
-    link: "#",
-  },
-];
+interface ApplicationFromSupabase {
+  id: string;
+  company: string;
+  position: string;
+  location: string;
+  status: string;
+  date: string;
+  link: string;
+  user_id: string; 
+}
 
 const Applications = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewFormOpen, setIsNewFormOpen] = useState(false);
-  const [applicationsList, setApplicationsList] = useState<Application[]>(applications);
+  const [applicationsList, setApplicationsList] = useState<Application[]>([]);
+  const session = useSession();
 
   useEffect(() => {
     // Listen for the custom event from the navbar
     const handleOpenNewForm = () => {
       setIsNewFormOpen(true);
     };
-    
+
     window.addEventListener("open-new-application-form", handleOpenNewForm);
-    
+
+    const fetchApplications = async () => {
+      if (!session) {
+        return; // Do not fetch if no session
+      }
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', session?.user?.id);
+
+      if (error) {
+        console.error('Error fetching applications:', error);
+      } else {
+        // Type assertion to ensure the data matches the expected type
+        setApplicationsList(data as Application[]);
+      }
+    };
+
+    fetchApplications();
+
     return () => {
       window.removeEventListener("open-new-application-form", handleOpenNewForm);
     };
-  }, []);
+  }, [session]);
 
   const filteredApplications = applicationsList.filter((app) => {
     const matchesFilter = !filter || app.status === filter;
