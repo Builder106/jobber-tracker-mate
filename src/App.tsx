@@ -3,6 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { UNSAFE_DataRouterContext, UNSAFE_DataRouterStateContext } from "react-router-dom";
+const router = {
+  basename: "/",
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+};
 import { useAuth } from "@/contexts/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Applications from "./pages/Applications";
@@ -35,7 +43,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter {...router}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />

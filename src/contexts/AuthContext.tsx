@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  signInWithMicrosoft: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -103,8 +105,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithMicrosoft = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          scopes: 'email profile'
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Microsoft authentication initiated",
+        description: "Please complete the sign-in process in the popup window."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Microsoft login failed",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Google authentication initiated",
+        description: "Please complete the sign-in process in the popup window."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Google login failed",
+        description: error.message || "Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      signup, 
+      logout,
+      signInWithMicrosoft,
+      signInWithGoogle 
+    }}>
       {children}
     </AuthContext.Provider>
   );

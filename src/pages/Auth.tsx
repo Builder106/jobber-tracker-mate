@@ -25,7 +25,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const plan = searchParams.get("plan");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, signInWithMicrosoft, signInWithGoogle } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -92,11 +92,13 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel htmlFor="email">Email</FormLabel>
                         <FormControl>
                           <Input
+                            id="email"
                             type="email" 
                             placeholder="name@example.com"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -111,7 +113,7 @@ const Auth = () => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel htmlFor="password">Password</FormLabel>
                           {isLogin && (
                             <Button 
                               variant="link" 
@@ -125,13 +127,16 @@ const Auth = () => {
                         <FormControl>
                           <div className="relative">
                             <Input
+                              id="password"
                               type={showPassword ? "text" : "password"}
+                              autoComplete={isLogin ? "current-password" : "new-password"}
                               {...field}
                             />
                             <button
                               type="button"
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                               onClick={() => setShowPassword(!showPassword)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -160,11 +165,21 @@ const Auth = () => {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" type="button" disabled={isLoading}>
+                    <Button 
+                      variant="outline" 
+                      type="button" 
+                      disabled={isLoading}
+                      onClick={signInWithMicrosoft}
+                    >
                       <BsMicrosoft className="mr-2 h-4 w-4" />
                       Microsoft
                     </Button>
-                    <Button variant="outline" type="button" disabled={isLoading}>
+                    <Button 
+                      variant="outline" 
+                      type="button" 
+                      disabled={isLoading}
+                      onClick={signInWithGoogle}
+                    >
                       <FcGoogle className="mr-2 h-4 w-4" />
                       Google
                     </Button>
