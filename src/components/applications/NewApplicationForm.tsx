@@ -58,13 +58,17 @@ type FormValues = z.infer<typeof formSchema>;
 interface NewApplicationFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApplicationAdded?: (application: Application) => void;
+  onApplicationAdded?: (application: Omit<Application, "id">) => void;
+  onApplicationUpdated?: (application: Application) => void;
+  existingApplication?: Application | null;
 }
 
 export function NewApplicationForm({
   open,
   onOpenChange,
   onApplicationAdded,
+  onApplicationUpdated,
+  existingApplication,
 }: NewApplicationFormProps) {
   const session = useSession();
   const form = useForm<FormValues>({
@@ -107,27 +111,45 @@ export function NewApplicationForm({
     return () => clearTimeout(timeoutId);
   }, [locationQuery]);
 
-  // Load draft from localStorage when form opens
+  // Load existing application or draft when form opens
   useEffect(() => {
     if (open) {
-      try {
-        const savedDraft = localStorage.getItem('applicationDraft');
-        if (savedDraft) {
-          const draft = JSON.parse(savedDraft);
-          // Convert the date string back to a Date object
-          if (draft.date) {
-            draft.date = new Date(draft.date);
+      if (existingApplication) {
+        // We're in edit mode - load the existing application
+        const formData = {
+          ...existingApplication,
+          // Convert the date string to a Date object
+          date: new Date(existingApplication.date),
+        };
+        form.reset(formData);
+        setLocationQuery(existingApplication.location);
+      } else {
+        // We're in create mode - try to load draft
+        try {
+          const savedDraft = localStorage.getItem('applicationDraft');
+          if (savedDraft) {
+            const draft = JSON.parse(savedDraft);
+            // Convert the date string back to a Date object
+            if (draft.date) {
+              draft.date = new Date(draft.date);
+            }
+            form.reset(draft);
+            if (draft.location) {
+              setLocationQuery(draft.location);
+            }
           }
-          form.reset(draft);
+        } catch (error) {
+          console.error('Error loading draft:', error);
         }
-      } catch (error) {
-        console.error('Error loading draft:', error);
       }
     }
-  }, [open, form]);
+  }, [open, form, existingApplication]);
 
-  // Save form data to localStorage when it changes
+  // Save form data to localStorage when it changes (only in create mode)
   useEffect(() => {
+    // Don't save drafts when editing an existing application
+    if (existingApplication) return;
+    
     const subscription = form.watch((value) => {
       if (open && Object.values(value).some(val => val)) {
         try {
@@ -143,48 +165,66 @@ export function NewApplicationForm({
       }
     });
     return () => subscription.unsubscribe();
-  }, [form, open]);
+  }, [form, open, existingApplication]);
 
   async function onSubmit(data: FormValues) {
-    // Create a new application object
-    const newApplication: Application = {
-      id: Date.now().toString(), // This will be replaced by Supabase
-      company: data.company,
-      position: data.position,
-      location: data.location,
-      status: data.status,
-      date: format(data.date, 'MMMM d, yyyy'),
-      link: data.link || undefined,
-      notes: data.notes || undefined,
-      user_id: session?.user?.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    
-    // Show success message
-    toast.success("Application added successfully!", {
-      description: `${data.position} at ${data.company}`,
-    });
+    if (existingApplication) {
+      // We're updating an existing application
+      const updatedApplication: Application = {
+        ...existingApplication,
+        company: data.company,
+        position: data.position,
+        location: data.location,
+        status: data.status,
+        date: format(data.date, 'MMMM d, yyyy'),
+        link: data.link || undefined,
+        notes: data.notes || undefined,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Notify parent component
+      if (onApplicationUpdated) {
+        onApplicationUpdated(updatedApplication);
+      }
+    } else {
+      // We're creating a new application
+      const newApplication: Omit<Application, "id"> = {
+        company: data.company,
+        position: data.position,
+        location: data.location,
+        status: data.status,
+        date: format(data.date, 'MMMM d, yyyy'),
+        link: data.link || undefined,
+        notes: data.notes || undefined,
+        user_id: session?.user?.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Clear the draft from localStorage
+      localStorage.removeItem('applicationDraft');
+      
+      // Notify parent component
+      if (onApplicationAdded) {
+        onApplicationAdded(newApplication);
+      }
+    }
     
     // Reset form and close dialog
     form.reset();
     onOpenChange(false);
-    
-    // Clear the draft from localStorage
-    localStorage.removeItem('applicationDraft');
-    
-    // Notify parent component
-    if (onApplicationAdded) {
-      onApplicationAdded(newApplication);
-    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Job Application</DialogTitle>
-          <DialogDescription>Please fill out the details below to add a new job application record.</DialogDescription>
+          <DialogTitle>{existingApplication ? 'Edit Job Application' : 'Add New Job Application'}</DialogTitle>
+          <DialogDescription>
+            {existingApplication 
+              ? 'Update the details of your job application.' 
+              : 'Please fill out the details below to add a new job application record.'}
+          </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
@@ -388,7 +428,9 @@ export function NewApplicationForm({
                 Cancel
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Adding..." : "Add Application"}
+                {form.formState.isSubmitting 
+                  ? (existingApplication ? "Updating..." : "Adding...") 
+                  : (existingApplication ? "Update Application" : "Add Application")}
               </Button>
             </DialogFooter>
           </form>

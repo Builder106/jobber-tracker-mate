@@ -5,28 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { NewApplicationForm } from "@/components/applications/NewApplicationForm";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Loader2 } from "lucide-react";
 import { fetchCompanyLogo } from "@/utils/brandfetch";
-import { supabase } from '@/utils/supabaseClient';
-import { useSession } from '@supabase/auth-helpers-react';
+import { useApplications } from "@/hooks/useApplications";
+import { toast } from "sonner";
 
-interface ApplicationFromSupabase {
-  id: string;
-  company: string;
-  position: string;
-  location: string;
-  status: string;
-  date: string;
-  link: string;
-  user_id: string; 
-}
+
 
 const Applications = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewFormOpen, setIsNewFormOpen] = useState(false);
-  const [applicationsList, setApplicationsList] = useState<Application[]>([]);
-  const session = useSession();
+  const [editingApplication, setEditingApplication] = useState<Application | null>(null);
+  
+  // Use our custom hook for applications data management
+  const { 
+    applications: applicationsList, 
+    isLoading, 
+    error, 
+    addApplication,
+    updateApplication,
+    deleteApplication,
+    updateApplicationStatus
+  } = useApplications();
 
   useEffect(() => {
     // Listen for the custom event from the navbar
@@ -36,29 +37,19 @@ const Applications = () => {
 
     window.addEventListener("open-new-application-form", handleOpenNewForm);
 
-    const fetchApplications = async () => {
-      if (!session) {
-        return; // Do not fetch if no session
-      }
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('user_id', session?.user?.id);
-
-      if (error) {
-        console.error('Error fetching applications:', error);
-      } else {
-        // Type assertion to ensure the data matches the expected type
-        setApplicationsList(data as Application[]);
-      }
-    };
-
-    fetchApplications();
-
     return () => {
       window.removeEventListener("open-new-application-form", handleOpenNewForm);
     };
-  }, [session]);
+  }, []);
+  
+  // Show error toast if there's an error loading applications
+  useEffect(() => {
+    if (error) {
+      toast.error("Error loading applications", {
+        description: "Please try refreshing the page"
+      });
+    }
+  }, [error]);
 
   const filteredApplications = applicationsList.filter((app) => {
     const matchesFilter = !filter || app.status === filter;
@@ -78,10 +69,7 @@ const Applications = () => {
     rejected: applicationsList.filter(a => a.status === "rejected").length,
   };
 
-  const handleApplicationAdded = async (newApplication: Application) => {
-    // In a real app, this would save to a database and refresh the list
-    // For now, we'll just add it to our local state
-    
+  const handleApplicationAdded = async (newApplication: Omit<Application, "id">) => {
     // Try to fetch a logo for the company
     try {
       const logoUrl = await fetchCompanyLogo(newApplication.company);
@@ -92,7 +80,23 @@ const Applications = () => {
       console.error("Error fetching logo for new application:", error);
     }
     
-    setApplicationsList([newApplication, ...applicationsList]);
+    // Use the mutation from our hook to add the application
+    addApplication.mutate(newApplication);
+  };
+  
+  const handleEditApplication = (application: Application) => {
+    setEditingApplication(application);
+    setIsNewFormOpen(true);
+  };
+  
+  const handleDeleteApplication = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this application?")) {
+      deleteApplication.mutate(id);
+    }
+  };
+  
+  const handleStatusChange = (id: string, newStatus: Application['status']) => {
+    updateApplicationStatus.mutate({ id, status: newStatus });
   };
 
   return (
@@ -167,24 +171,44 @@ const Applications = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredApplications.length > 0 ? (
-            filteredApplications.map((application) => (
-              <ApplicationCard key={application.id} application={application} />
-            ))
-          ) : (
-            <div className="col-span-3 py-12 text-center">
-              <h3 className="text-lg font-medium">No applications found</h3>
-              <p className="text-muted-foreground mt-1">Try adjusting your filters or search query</p>
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="col-span-3 py-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading your applications...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredApplications.length > 0 ? (
+              filteredApplications.map((application) => (
+                <ApplicationCard 
+                  key={application.id} 
+                  application={application} 
+                  onEdit={handleEditApplication}
+                  onDelete={handleDeleteApplication}
+                  onStatusChange={handleStatusChange}
+                />
+              ))
+            ) : (
+              <div className="col-span-3 py-12 text-center">
+                <h3 className="text-lg font-medium">No applications found</h3>
+                <p className="text-muted-foreground mt-1">Try adjusting your filters or search query</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <NewApplicationForm 
         open={isNewFormOpen} 
-        onOpenChange={setIsNewFormOpen}
+        onOpenChange={(open) => {
+          setIsNewFormOpen(open);
+          if (!open) setEditingApplication(null);
+        }}
         onApplicationAdded={handleApplicationAdded}
+        existingApplication={editingApplication}
+        onApplicationUpdated={(application) => {
+          updateApplication.mutate(application);
+        }}
       />
     </AppLayout>
   );

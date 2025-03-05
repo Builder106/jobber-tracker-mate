@@ -22,7 +22,8 @@ export async function fetchLocationSuggestions(query: string): Promise<LocationS
     // First try to use the Google Places API if the key is available
     const googleApiKey = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
     
-    console.log('Google API Key available:', !!googleApiKey);
+    // Only log in development environment
+    if (import.meta.env.DEV) console.log('Google API Key available:', !!googleApiKey);
     
     if (googleApiKey && googleApiKey !== 'your-google-places-api-key') {
       try {
@@ -31,7 +32,8 @@ export async function fetchLocationSuggestions(query: string): Promise<LocationS
           query
         )}&types=(cities)&key=${googleApiKey}`;
         
-        console.log('Fetching from URL:', apiUrl);
+        // Only log in development environment
+        if (import.meta.env.DEV) console.log('Fetching from URL:', apiUrl);
         
         const response = await fetch(apiUrl);
         
@@ -41,14 +43,16 @@ export async function fetchLocationSuggestions(query: string): Promise<LocationS
         }
         
         const data = await response.json();
-        console.log('Google API response:', data);
+        // Only log in development environment
+        if (import.meta.env.DEV) console.log('Google API response:', data);
         
         if (data.status === 'OK') {
           const results = data.predictions.map((prediction: any) => ({
             description: prediction.description,
             placeId: prediction.place_id,
           }));
-          console.log('Parsed results:', results);
+          // Only log in development environment
+          if (import.meta.env.DEV) console.log('Parsed results:', results);
           return results;
         } else {
           console.warn('Google API returned non-OK status:', data.status, data.error_message);
@@ -83,7 +87,8 @@ export async function fetchLocationSuggestions(query: string): Promise<LocationS
     console.error('Error fetching location suggestions:', error);
     // If we get here, both Google and Teleport APIs failed
     // Let's provide some mock data for testing
-    console.log('Returning mock data for testing');
+    // Only log in development environment
+    if (import.meta.env.DEV) console.log('Returning mock data for testing');
     return [
       { description: 'San Francisco, CA, USA', placeId: 'mock1' },
       { description: 'New York, NY, USA', placeId: 'mock2' },
