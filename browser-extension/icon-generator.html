@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Icon Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    .icon-container {
+      margin-bottom: 20px;
+    }
+    .download-links {
+      margin-top: 20px;
+    }
+    a {
+      display: block;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Browser Extension Icon Generator</h1>
+  
+  <div class="icon-container">
+    <h2>16x16 Icon</h2>
+    <canvas id="icon16" width="16" height="16"></canvas>
+    <div id="icon16Data"></div>
+  </div>
+  
+  <div class="icon-container">
+    <h2>48x48 Icon</h2>
+    <canvas id="icon48" width="48" height="48"></canvas>
+    <div id="icon48Data"></div>
+  </div>
+  
+  <div class="icon-container">
+    <h2>128x128 Icon</h2>
+    <canvas id="icon128" width="128" height="128"></canvas>
+    <div id="icon128Data"></div>
+  </div>
+  
+  <div class="download-links">
+    <h2>Download Links</h2>
+    <a id="download16" download="icon16.png" href="#">Download 16x16 Icon</a>
+    <a id="download48" download="icon48.png" href="#">Download 48x48 Icon</a>
+    <a id="download128" download="icon128.png" href="#">Download 128x128 Icon</a>
+  </div>
+  
+  <script>
+    function drawIcon(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      
+      // Draw background
+      ctx.fillStyle = '#4285F4'; // Google Blue
+      ctx.fillRect(0, 0, size, size);
+      
+      // Draw a simple "C" letter for CareerClutch
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${Math.floor(size * 0.7)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('C', size/2, size/2);
+      
+      // Add border
+      ctx.strokeStyle = '#3367D6'; // Darker blue
+      ctx.lineWidth = Math.max(1, Math.floor(size * 0.05));
+      ctx.strokeRect(0, 0, size, size);
+      
+      // Update download link
+      const dataUrl = canvas.toDataURL('image/png');
+      document.getElementById(`download${size}`).href = dataUrl;
+      
+      // Display data URL (truncated)
+      const dataDiv = document.getElementById(`icon${size}Data`);
+      dataDiv.innerHTML = `<small>Data URL: ${dataUrl.substring(0, 30)}...</small>`;
+      
+      return dataUrl;
+    }
+    
+    // Draw all icons when page loads
+    window.onload = function() {
+      drawIcon('icon16', 16);
+      drawIcon('icon48', 48);
+      drawIcon('icon128', 128);
+    };
+  </script>
+</body>
+</html>
