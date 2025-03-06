@@ -228,13 +228,7 @@ const Profile = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between border-t pt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/pricing")}
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Upgrade Plan
-                </Button>
+
                 
                 <Button
                   variant="destructive"
@@ -395,9 +389,7 @@ const Profile = () => {
                 <div className="p-6 bg-muted/50 rounded-lg text-center">
                   <h3 className="font-medium text-lg mb-2">Free Plan</h3>
                   <p className="text-muted-foreground mb-4">You're currently on the free plan</p>
-                  <Button onClick={() => navigate("/pricing")}>
-                    View Pricing Plans
-                  </Button>
+
                 </div>
                 
                 <div className="space-y-4">
@@ -419,9 +411,7 @@ const Profile = () => {
                 </div>
               </CardContent>
               <CardFooter className="border-t pt-6">
-                <Button variant="outline" onClick={() => navigate("/pricing")}>
-                  Upgrade to Premium
-                </Button>
+
               </CardFooter>
             </Card>
           </TabsContent>

@@ -60,13 +60,23 @@ const PricingCard = ({ tier, className }: PricingCardProps) => {
         </ul>
       </CardContent>
       <CardFooter className="pt-4 mt-auto">
-        <Button 
-          variant={tier.highlighted ? "default" : "outline"} 
-          className="w-full"
-          asChild
-        >
-          <a href={tier.actionUrl}>{tier.actionText}</a>
-        </Button>
+        {tier.actionText === "Current Plan" ? (
+          <Button 
+            variant={tier.highlighted ? "default" : "outline"} 
+            className="w-full"
+            disabled
+          >
+            {tier.actionText}
+          </Button>
+        ) : (
+          <Button 
+            variant={tier.highlighted ? "default" : "outline"} 
+            className="w-full"
+            asChild
+          >
+            <a href={tier.actionUrl}>{tier.actionText}</a>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

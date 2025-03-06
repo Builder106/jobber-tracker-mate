@@ -68,12 +68,9 @@ const Features = () => {
         <p className="text-muted-foreground mb-8">
           Join thousands of job seekers who have streamlined their job search with Jobber Tracker Mate
         </p>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center">
           <Button asChild size="lg">
             <Link to="/auth">Get Started</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link to="/pricing">View Pricing</Link>
           </Button>
         </div>
       </div>

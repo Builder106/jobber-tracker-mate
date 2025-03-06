@@ -114,13 +114,9 @@ const Index = () => {
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
             Join thousands of job seekers who have successfully organized their job search and landed their dream roles.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex items-center justify-center">
             <Button size="lg" onClick={() => navigate("/signup")}>
               Get Started Free
-            </Button>
-            <Button variant="link" size="lg" onClick={() => navigate("/pricing")}>
-              View pricing
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>

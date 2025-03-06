@@ -15,7 +15,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Applications from "./pages/Applications";
 import Calendar from "./pages/Calendar";
-import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -56,7 +55,8 @@ const App = () => {
             {/* Public routes */}
             <Route path="/" element={isLoading ? <div>Loading...</div> : (user ? <Navigate to="/dashboard" /> : <Landing />)} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/signup" element={<Navigate to="/auth" state={{ from: 'signup' }} replace />} />
+
             <Route path="/features" element={<Features />} />
 
             {/* Protected routes */}

@@ -9,7 +9,7 @@ const pricingTiers: PricingTier[] = [
     price: "Free",
     description: "Perfect for job seekers just getting started",
     highlighted: false,
-    actionText: "Get Started",
+    actionText: "Current Plan",
     actionUrl: "/signup",
     features: [
       { name: "Track up to 10 applications", included: true },

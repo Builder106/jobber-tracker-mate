@@ -95,13 +95,7 @@ const Navbar = () => {
             >
               Calendar
             </NavItem>
-            <NavItem 
-              href="/pricing" 
-              active={pathname === "/pricing"}
-              icon={<CreditCard className="w-4 h-4" />}
-            >
-              Pricing
-            </NavItem>
+
           </nav>
         </div>
         
@@ -195,14 +189,7 @@ const Navbar = () => {
                   >
                     Calendar
                   </NavItem>
-                  <NavItem 
-                    href="/pricing" 
-                    active={pathname === "/pricing"}
-                    icon={<CreditCard className="w-4 h-4" />}
-                    onClick={closeMobileMenu}
-                  >
-                    Pricing
-                  </NavItem>
+
                 </nav>
                 <div className="mt-auto pt-4 border-t">
                   {user ? (

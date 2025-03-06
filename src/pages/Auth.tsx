@@ -27,7 +27,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const { login, signInWithMicrosoft, signInWithGoogle } = useAuth();
   
-  const [isLogin, setIsLogin] = useState(true);
+  // If a plan is specified in the URL, default to signup mode
+  const [isLogin, setIsLogin] = useState(!plan);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,7 +60,19 @@ const Auth = () => {
   const onSubmit = async (values: z.infer<typeof authSchema>) => {
     setIsLoading(true);
     try {
-      await login(values.email, values.password);
+      if (isLogin) {
+        await login(values.email, values.password);
+      } else {
+        // Here you would implement signup functionality
+        // For now, we'll simulate it with login
+        await login(values.email, values.password);
+        
+        // If there's a plan parameter, you might want to store that information
+        if (plan) {
+          console.log(`User signed up with ${plan} plan`);
+          // Here you would typically store the plan selection in your database
+        }
+      }
       navigate("/applications");
     } catch (error) {
       console.error("Authentication error:", error);
@@ -73,12 +86,12 @@ const Auth = () => {
       <div className="w-full max-w-md p-4">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {isLogin ? "Welcome back" : "Create an account"}
+            {isLogin ? "Welcome back" : plan ? `Sign up for ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan` : "Create an account"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {isLogin 
               ? "Enter your credentials to sign in to your account" 
-              : "Enter your information to create your account"}
+              : plan ? "Start your 14-day free trial today" : "Enter your information to create your account"}
           </p>
         </div>
 
@@ -202,9 +215,20 @@ const Auth = () => {
                   </Button>
                 </div>
                 {plan && (
-                  <div className="text-xs text-center text-muted-foreground">
-                    You're signing up for the <span className="font-medium">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span> plan. 
-                    You can change this later.
+                  <div className="text-sm text-center p-3 bg-primary/10 rounded-md border border-primary/20">
+                    <div className="font-medium text-primary mb-1">
+                      {plan === 'pro' ? 'Pro Plan Selected' : plan === 'premium' ? 'Premium Plan Selected' : `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Selected`}
+                    </div>
+                    <div className="text-muted-foreground">
+                      {plan === 'pro' ? 
+                        'Includes unlimited applications, advanced tracking, and interview prep tools.' : 
+                        plan === 'premium' ? 
+                        'Includes all Pro features plus resume analysis and priority support.' : 
+                        'You can change your plan anytime after signup.'}
+                    </div>
+                    <div className="mt-2 text-xs">
+                      Your 14-day free trial starts today. No credit card required.
+                    </div>
                   </div>
                 )}
               </CardFooter>
