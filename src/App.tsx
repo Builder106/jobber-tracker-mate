@@ -26,17 +26,25 @@ const queryClient = new QueryClient();
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
-  if (!user) {
+  // Only redirect if we're not loading and there's no user
+  if (!isLoading && !user) {
+    console.log('[ProtectedRoute] No authenticated user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
+  }
+  
+  // Show a loading state while checking authentication
+  if (isLoading) {
+    console.log('[ProtectedRoute] Authentication state is loading');
+    return <div>Loading...</div>; // You could replace this with a proper loading component
   }
   
   return children;
 };
 
 const App = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -46,7 +54,7 @@ const App = () => {
         <BrowserRouter {...router}>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+            <Route path="/" element={isLoading ? <div>Loading...</div> : (user ? <Navigate to="/dashboard" /> : <Landing />)} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/features" element={<Features />} />

@@ -7,7 +7,7 @@ import ApplicationCard, { Application } from "@/components/applications/Applicat
 import { Briefcase, Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchDashboardData, DashboardStats } from "@/utils/dashboardUtils";
-import { useSession } from '@supabase/auth-helpers-react';
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -20,16 +20,16 @@ const Dashboard = () => {
     recentApplications: [],
     monthlyApplicationData: []
   });
-  const session = useSession();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!session?.user?.id) return;
+      if (!user?.id) return;
       
       setIsLoading(true);
       try {
-        const data = await fetchDashboardData(session.user.id);
+        const data = await fetchDashboardData(user.id);
         setDashboardData(data);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -39,7 +39,7 @@ const Dashboard = () => {
     };
     
     loadDashboardData();
-  }, [session]);
+  }, [user]);
   return (
     <AppLayout>
       <div className="space-y-8 animate-slide-up">
