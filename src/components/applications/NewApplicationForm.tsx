@@ -184,6 +184,14 @@ export function NewApplicationForm({
   }, [form, open, existingApplication]);
 
   async function onSubmit(data: FormValues) {
+    // Check if user is authenticated
+    if (!session || !session.user) {
+      toast.error("Authentication required", {
+        description: "You must be logged in to manage applications",
+      });
+      return;
+    }
+    
     if (existingApplication) {
       // We're updating an existing application
       const updatedApplication: Application = {
@@ -200,7 +208,15 @@ export function NewApplicationForm({
       
       // Notify parent component
       if (onApplicationUpdated) {
-        onApplicationUpdated(updatedApplication);
+        try {
+          onApplicationUpdated(updatedApplication);
+          // Reset form and close dialog only on success
+          form.reset();
+          onOpenChange(false);
+        } catch (error) {
+          console.error("Error updating application:", error);
+          // Form stays open if there's an error
+        }
       }
     } else {
       // We're creating a new application
@@ -212,23 +228,29 @@ export function NewApplicationForm({
         date: data.date.toISOString(),
         link: data.link || undefined,
         notes: data.notes || undefined,
-        user_id: session?.user?.id,
+        user_id: session.user.id, // Ensure user_id is set from the session
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+      
+      console.log("Submitting new application with user_id:", session.user.id);
       
       // Clear the draft from localStorage
       localStorage.removeItem('applicationDraft');
       
       // Notify parent component
       if (onApplicationAdded) {
-        onApplicationAdded(newApplication);
+        try {
+          await onApplicationAdded(newApplication);
+          // Reset form and close dialog only on success
+          form.reset();
+          onOpenChange(false);
+        } catch (error) {
+          console.error("Error adding application:", error);
+          // Form stays open if there's an error
+        }
       }
     }
-    
-    // Reset form and close dialog
-    form.reset();
-    onOpenChange(false);
   }
 
   return (
@@ -273,7 +295,6 @@ export function NewApplicationForm({
                 </FormItem>
               )}
             />
-            
             <FormField
               control={form.control}
               name="location"

@@ -38,13 +38,29 @@ export const useApplications = () => {
   // Add a new application
   const addApplication = useMutation({
     mutationFn: async (newApplication: Omit<Application, "id">) => {
+      // Check if we have a valid user ID
+      if (!userId) {
+        const error = new Error("You must be logged in to add an application");
+        handleApiError(error, "Authentication required");
+        throw error;
+      }
+
+      // Ensure user_id is explicitly set to the current user's ID
+      const applicationData = {
+        ...newApplication,
+        user_id: userId,
+      };
+
+      console.log("Adding application with data:", applicationData);
+
       const { data, error } = await supabase
         .from("applications")
-        .insert([{ ...newApplication, user_id: userId }])
+        .insert([applicationData])
         .select()
         .single();
 
       if (error) {
+        console.error("Supabase error details:", error);
         handleApiError(error, "Failed to add application");
         throw error;
       }
