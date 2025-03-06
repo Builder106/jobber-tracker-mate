@@ -3,6 +3,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+  mode: 'production',
   entry: {
     popup: './src/popup/index.tsx',
     background: './src/background.ts',
@@ -41,8 +42,19 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { 
+          from: 'public/manifest.json', 
+          to: 'manifest.json'
+        },
+        { 
+          from: 'public/icons', 
+          to: 'icons'
+        },
+        { 
           from: 'public', 
-          to: '.' 
+          to: '.',
+          globOptions: {
+            ignore: ['**/popup.html', '**/options.html', '**/manifest.json', '**/icons/**']
+          }
         },
         {
           from: 'src/assets',

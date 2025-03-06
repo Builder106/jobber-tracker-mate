@@ -7,7 +7,8 @@
     "build": "webpack --config webpack.config.js",
     "watch": "webpack --watch --config webpack.config.js",
     "dev": "webpack --watch --config webpack.config.js --mode=development",
-    "package": "npm run build && zip -r jobber-tracker-mate-extension.zip dist"
+    "package": "npm run build && zip -r jobber-tracker-mate-extension.zip dist",
+    "setup": "npm install && npm run build"
   },
   "keywords": [
     "browser-extension",

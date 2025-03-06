@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobber Tracker Mate</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="icons/icon48.png" alt="Jobber Tracker Mate Logo" class="logo">
+      <h1>Jobber Tracker Mate</h1>
+    </div>
+    
+    <div id="not-job-page" class="content-section">
+      <p>Navigate to a job posting on LinkedIn, Indeed, Glassdoor, Monster, or ZipRecruiter to save it to your Jobber Tracker Mate account.</p>
+    </div>
+    
+    <div id="job-detected" class="content-section hidden">
+      <div class="job-info">
+        <h2 id="job-title">Job Title</h2>
+        <p id="company-name">Company Name</p>
+        <p id="job-location">Location</p>
+      </div>
+      
+      <button id="save-job" class="primary-button">Save to Jobber Tracker Mate</button>
+      <div id="status-message" class="status-message"></div>
+    </div>
+    
+    <div id="auth-section" class="content-section hidden">
+      <p>Please sign in to your Jobber Tracker Mate account to save jobs.</p>
+      <button id="login-button" class="secondary-button">Sign In</button>
+    </div>
+    
+    <div class="footer">
+      <button id="settings-button" class="text-button">Settings</button>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
