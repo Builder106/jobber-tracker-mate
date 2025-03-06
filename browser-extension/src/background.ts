@@ -1,5 +1,5 @@
 /**
- * Background script for the Jobber Tracker Mate browser extension
+ * Background script for the CareerChronos browser extension
  * This script runs in the background and handles communication between
  * the content scripts, popup, and the main application
  */
@@ -8,7 +8,7 @@ import { JobDetails } from './types';
 
 // Listen for installation
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Jobber Tracker Mate extension installed');
+  console.log('CareerChronos extension installed');
   
   // Set default settings
   chrome.storage.local.set({

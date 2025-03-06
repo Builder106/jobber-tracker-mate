@@ -1,13 +1,13 @@
 {
-  "name": "jobber-tracker-mate-extension",
+  "name": "career-chronos-extension",
   "version": "1.0.0",
-  "description": "Browser extension for Jobber Tracker Mate to save job postings directly from job boards",
+  "description": "Browser extension for CareerChronos to save job postings directly from job boards",
   "private": true,
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "watch": "webpack --watch --config webpack.config.js",
     "dev": "webpack --watch --config webpack.config.js --mode=development",
-    "package": "npm run build && zip -r jobber-tracker-mate-extension.zip dist",
+    "package": "npm run build && zip -r career-chronos-extension.zip dist",
     "setup": "npm install && npm run build"
   },
   "keywords": [

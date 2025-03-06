@@ -119,8 +119,8 @@ const Options: React.FC = () => {
   return (
     <div className="container">
       <div className="header">
-        <img src="../assets/icon48.png" alt="Jobber Tracker Mate Logo" className="logo" />
-        <h1>Jobber Tracker Mate Settings</h1>
+        <img src="../assets/icon48.png" alt="CareerChronos Logo" className="logo" />
+        <h1>CareerChronos Settings</h1>
       </div>
 
       <div className="section">
@@ -133,9 +133,9 @@ const Options: React.FC = () => {
             name="apiUrl"
             value={settings.apiUrl}
             onChange={handleInputChange}
-            placeholder="https://your-jobber-tracker-api.com"
+            placeholder="https://your-careerchronos-api.com"
           />
-          <p className="help-text">The URL of your Jobber Tracker Mate API server</p>
+          <p className="help-text">The URL of your CareerChronos API server</p>
         </div>
       </div>
 
@@ -253,9 +253,9 @@ const Options: React.FC = () => {
       </div>
 
       <div className="footer">
-        <p>Jobber Tracker Mate Browser Extension</p>
+        <p>CareerChronos Browser Extension</p>
         <p className="version">Version 1.0.0</p>
-        <p><a href="https://github.com/your-username/jobber-tracker-mate" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
+        <p><a href="https://github.com/your-username/career-chronos" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
       </div>
     </div>
   );

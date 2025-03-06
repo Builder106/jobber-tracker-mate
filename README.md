@@ -1,8 +1,8 @@
-# Jobber Tracker Mate
+# CareerChronos
 
 A comprehensive job application tracking system to help job seekers organize their job search process, track applications, and manage interviews.
 
-![Jobber Tracker Mate](https://github.com/username/jobber-tracker-mate/raw/main/public/screenshot.png)
+![CareerChronos](https://github.com/username/career-chronos/raw/main/public/screenshot.png)
 
 ## Features
 
@@ -35,8 +35,8 @@ A comprehensive job application tracking system to help job seekers organize the
 
 1. Clone the repository
    ```sh
-   git clone https://github.com/username/jobber-tracker-mate.git
-   cd jobber-tracker-mate
+   git clone https://github.com/username/career-chronos.git
+   cd career-chronos
    ```
 
 2. Install dependencies

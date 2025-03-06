@@ -1,5 +1,5 @@
 /**
- * Content script for the Jobber Tracker Mate browser extension
+ * Content script for the CareerChronos browser extension
  * This script runs in the context of the job board websites and extracts job details
  */
 
@@ -67,14 +67,14 @@ function extractJobDetails(): JobDetails {
 // Function to inject a save button into the job page
 function injectSaveButton() {
   // Check if button already exists
-  if (document.getElementById('jobber-tracker-save-btn')) {
+  if (document.getElementById('career-chronos-save-btn')) {
     return;
   }
   
   // Create floating button
   const saveButton = document.createElement('button');
-  saveButton.id = 'jobber-tracker-save-btn';
-  saveButton.textContent = 'Save to Jobber Tracker';
+  saveButton.id = 'career-chronos-save-btn';
+  saveButton.textContent = 'Save to CareerChronos';
   saveButton.style.position = 'fixed';
   saveButton.style.bottom = '20px';
   saveButton.style.right = '20px';
@@ -125,13 +125,12 @@ function injectSaveButton() {
           
           // Reset button after a delay
           setTimeout(() => {
-            saveButton.innerHTML = '✓ Saved to Jobber Tracker';
+            saveButton.innerHTML = '✓ Saved to CareerChronos';
             saveButton.prepend(icon);
             
             // Reset after 3 seconds
             setTimeout(() => {
-              saveButton.innerHTML = 'Save to Jobber Tracker';
-              saveButton.disabled = false;
+              saveButton.innerHTML = 'Save to CareerChronos';              saveButton.disabled = false;
               saveButton.prepend(icon);
             }, 3000);
           }, 1000);
@@ -142,7 +141,7 @@ function injectSaveButton() {
           
           // Reset after 3 seconds
           setTimeout(() => {
-            saveButton.innerHTML = 'Save to Jobber Tracker';
+            saveButton.innerHTML = 'Save to CareerChronos';
             saveButton.disabled = false;
             saveButton.prepend(icon);
           }, 3000);

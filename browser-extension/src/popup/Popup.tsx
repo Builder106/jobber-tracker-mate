@@ -154,8 +154,8 @@ const Popup: React.FC = () => {
   return (
     <div className="container">
       <div className="header">
-        <img src="assets/icon48.png" alt="Jobber Tracker Mate Logo" className="logo" />
-        <h1>Jobber Tracker Mate</h1>
+        <img src="assets/icon48.png" alt="CareerChronos Logo" className="logo" />
+        <h1>CareerChronos</h1>
       </div>
       
       {!isJobPage && (
@@ -238,7 +238,7 @@ const Popup: React.FC = () => {
                 <span className="spinner"></span>
                 Saving Job...
               </>
-            ) : '💾 Save to Jobber Tracker Mate'}
+            ) : '💾 Save to CareerChronos'}
           </button>
           
           {statusMessage && (
@@ -254,7 +254,7 @@ const Popup: React.FC = () => {
           <div className="empty-state">
             <div className="empty-state-icon">🔐</div>
             <h3>Authentication Required</h3>
-            <p className="empty-state-text">Please sign in to your Jobber Tracker Mate account to save jobs.</p>
+            <p className="empty-state-text">Please sign in to your CareerChronos account to save jobs.</p>
             <button className="primary-button" onClick={handleLogin}>
               Sign In to Your Account
             </button>

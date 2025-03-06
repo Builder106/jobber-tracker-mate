@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Jobber Tracker Mate",
+  "name": "CareerChronos",
   "version": "1.0.0",
-  "description": "Save job postings directly from popular job boards to your Jobber Tracker Mate application",
+  "description": "Save job postings directly from popular job boards to your CareerChronos application",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
