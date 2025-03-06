@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../shared/theme.css';
 
 interface SettingsState {
   apiUrl: string;
@@ -105,7 +106,14 @@ const Options: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="container">Loading settings...</div>;
+    return (
+      <div className="container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading your settings...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -116,7 +124,7 @@ const Options: React.FC = () => {
       </div>
 
       <div className="section">
-        <h2>API Configuration</h2>
+        <h2>🔗 API Configuration</h2>
         <div className="form-group">
           <label htmlFor="apiUrl">API URL</label>
           <input
@@ -132,7 +140,7 @@ const Options: React.FC = () => {
       </div>
 
       <div className="section">
-        <h2>Supported Job Sites</h2>
+        <h2>🌐 Supported Job Sites</h2>
         <p className="help-text">Enable or disable job detection for specific sites</p>
         
         <div className="form-group">
@@ -144,7 +152,10 @@ const Options: React.FC = () => {
               checked={settings.enabledSites.linkedin}
               onChange={handleInputChange}
             />
-            <label htmlFor="site-linkedin">LinkedIn</label>
+            <label htmlFor="site-linkedin">
+              LinkedIn
+              {settings.enabledSites.linkedin && <span className="badge badge-success">Active</span>}
+            </label>
           </div>
           
           <div className="checkbox-group">
@@ -155,7 +166,10 @@ const Options: React.FC = () => {
               checked={settings.enabledSites.indeed}
               onChange={handleInputChange}
             />
-            <label htmlFor="site-indeed">Indeed</label>
+            <label htmlFor="site-indeed">
+              Indeed
+              {settings.enabledSites.indeed && <span className="badge badge-success">Active</span>}
+            </label>
           </div>
           
           <div className="checkbox-group">
@@ -166,7 +180,10 @@ const Options: React.FC = () => {
               checked={settings.enabledSites.glassdoor}
               onChange={handleInputChange}
             />
-            <label htmlFor="site-glassdoor">Glassdoor</label>
+            <label htmlFor="site-glassdoor">
+              Glassdoor
+              {settings.enabledSites.glassdoor && <span className="badge badge-success">Active</span>}
+            </label>
           </div>
           
           <div className="checkbox-group">
@@ -177,7 +194,10 @@ const Options: React.FC = () => {
               checked={settings.enabledSites.monster}
               onChange={handleInputChange}
             />
-            <label htmlFor="site-monster">Monster</label>
+            <label htmlFor="site-monster">
+              Monster
+              {settings.enabledSites.monster && <span className="badge badge-success">Active</span>}
+            </label>
           </div>
           
           <div className="checkbox-group">
@@ -188,13 +208,16 @@ const Options: React.FC = () => {
               checked={settings.enabledSites.ziprecruiter}
               onChange={handleInputChange}
             />
-            <label htmlFor="site-ziprecruiter">ZipRecruiter</label>
+            <label htmlFor="site-ziprecruiter">
+              ZipRecruiter
+              {settings.enabledSites.ziprecruiter && <span className="badge badge-success">Active</span>}
+            </label>
           </div>
         </div>
       </div>
 
       <div className="section">
-        <h2>Notifications</h2>
+        <h2>🔔 Notifications</h2>
         <div className="form-group">
           <div className="checkbox-group">
             <input
@@ -204,29 +227,35 @@ const Options: React.FC = () => {
               checked={settings.showNotifications}
               onChange={handleInputChange}
             />
-            <label htmlFor="showNotifications">Show notifications when jobs are saved</label>
+            <label htmlFor="showNotifications">
+              Show notifications when jobs are saved
+              {settings.showNotifications && <span className="badge badge-success">Enabled</span>}
+            </label>
           </div>
+          <p className="help-text">You'll receive a notification when a job is successfully saved to your account</p>
         </div>
       </div>
 
       {statusMessage && (
         <div className={`status-message ${statusMessage.type}`}>
+          {statusMessage.type === 'success' ? '✅ ' : '❌ '}
           {statusMessage.text}
         </div>
       )}
 
       <div className="button-group">
         <button className="secondary-button" onClick={handleReset}>
-          Reset to Defaults
+          ↺ Reset to Defaults
         </button>
         <button className="primary-button" onClick={handleSave}>
-          Save Settings
+          💾 Save Settings
         </button>
       </div>
 
       <div className="footer">
         <p>Jobber Tracker Mate Browser Extension</p>
         <p className="version">Version 1.0.0</p>
+        <p><a href="https://github.com/your-username/jobber-tracker-mate" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
       </div>
     </div>
   );

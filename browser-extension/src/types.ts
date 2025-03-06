@@ -10,6 +10,8 @@ export interface JobDetails {
   description: string;
   source: string;
   url?: string;
+  salary?: string;
+  jobType?: string;
 }
 
 // User profile information

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { JobDetails, AuthStatus } from '../types';
+import '../shared/theme.css';
 
 const Popup: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<chrome.tabs.Tab | null>(null);
@@ -159,29 +160,85 @@ const Popup: React.FC = () => {
       
       {!isJobPage && (
         <div className="content-section">
-          <p>Navigate to a job posting on LinkedIn, Indeed, Glassdoor, Monster, or ZipRecruiter to save it to your Jobber Tracker Mate account.</p>
+          <div className="empty-state">
+            <div className="empty-state-icon">🔍</div>
+            <h3>No Job Detected</h3>
+            <p className="empty-state-text">Navigate to a job posting on one of our supported platforms to save it to your account.</p>
+            <div className="badge-container">
+              <span className="badge badge-primary">LinkedIn</span>
+              <span className="badge badge-primary">Indeed</span>
+              <span className="badge badge-primary">Glassdoor</span>
+              <span className="badge badge-primary">Monster</span>
+              <span className="badge badge-primary">ZipRecruiter</span>
+            </div>
+          </div>
         </div>
       )}
       
       {isJobPage && jobDetails && authStatus.isAuthenticated && (
         <div className="content-section">
-          <div className="job-info">
-            <h2>{jobDetails.title || 'Unknown Position'}</h2>
-            <p>{jobDetails.company || 'Unknown Company'}</p>
-            <p>{jobDetails.location || 'Unknown Location'}</p>
+          <div className="job-card">
+            <div className="job-header">
+              <h2>{jobDetails.title || 'Unknown Position'}</h2>
+              <div className="job-source-badge">
+                {currentTab?.url?.includes('linkedin.com') && <span className="badge badge-linkedin">LinkedIn</span>}
+                {currentTab?.url?.includes('indeed.com') && <span className="badge badge-indeed">Indeed</span>}
+                {currentTab?.url?.includes('glassdoor.com') && <span className="badge badge-glassdoor">Glassdoor</span>}
+                {currentTab?.url?.includes('monster.com') && <span className="badge badge-monster">Monster</span>}
+                {currentTab?.url?.includes('ziprecruiter.com') && <span className="badge badge-ziprecruiter">ZipRecruiter</span>}
+              </div>
+            </div>
+            
+            <div className="job-details">
+              <div className="job-detail-item">
+                <span className="job-detail-icon">🏢</span>
+                <div className="job-detail-content">
+                  <span className="job-detail-label">Company</span>
+                  <span className="job-detail-value">{jobDetails.company || 'Unknown Company'}</span>
+                </div>
+              </div>
+              
+              <div className="job-detail-item">
+                <span className="job-detail-icon">📍</span>
+                <div className="job-detail-content">
+                  <span className="job-detail-label">Location</span>
+                  <span className="job-detail-value">{jobDetails.location || 'Unknown Location'}</span>
+                </div>
+              </div>
+              
+              {jobDetails.salary && (
+                <div className="job-detail-item">
+                  <span className="job-detail-icon">💰</span>
+                  <div className="job-detail-content">
+                    <span className="job-detail-label">Salary</span>
+                    <span className="job-detail-value">{jobDetails.salary}</span>
+                  </div>
+                </div>
+              )}
+              
+              {jobDetails.jobType && (
+                <div className="job-detail-item">
+                  <span className="job-detail-icon">⏱️</span>
+                  <div className="job-detail-content">
+                    <span className="job-detail-label">Job Type</span>
+                    <span className="job-detail-value">{jobDetails.jobType}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           <button 
-            className="primary-button" 
+            className="primary-button save-job-button" 
             onClick={handleSaveJob}
             disabled={isSaving}
           >
             {isSaving ? (
               <>
                 <span className="spinner"></span>
-                Saving...
+                Saving Job...
               </>
-            ) : 'Save to Jobber Tracker Mate'}
+            ) : '💾 Save to Jobber Tracker Mate'}
           </button>
           
           {statusMessage && (
@@ -194,16 +251,28 @@ const Popup: React.FC = () => {
       
       {(!authStatus.isAuthenticated) && (
         <div className="content-section">
-          <p>Please sign in to your Jobber Tracker Mate account to save jobs.</p>
-          <button className="secondary-button" onClick={handleLogin}>
-            Sign In
-          </button>
+          <div className="empty-state">
+            <div className="empty-state-icon">🔐</div>
+            <h3>Authentication Required</h3>
+            <p className="empty-state-text">Please sign in to your Jobber Tracker Mate account to save jobs.</p>
+            <button className="primary-button" onClick={handleLogin}>
+              Sign In to Your Account
+            </button>
+          </div>
         </div>
       )}
       
       <div className="footer">
+        <div>
+          {authStatus.isAuthenticated && authStatus.user && (
+            <div className="user-info">
+              <span className="badge badge-success">✓ Signed in</span>
+              {authStatus.user.email && <span>{authStatus.user.email}</span>}
+            </div>
+          )}
+        </div>
         <button className="text-button" onClick={handleOpenSettings}>
-          Settings
+          ⚙️ Settings
         </button>
       </div>
     </div>
