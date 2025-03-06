@@ -17,8 +17,15 @@ export const useApplications = () => {
   const { data: applications = [], isLoading, error, refetch } = useQuery({
     queryKey: ["applications", userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId) {
+        console.error("[useApplications] No user ID available, cannot fetch applications");
+        toast.error("Authentication required", {
+          description: "You must be logged in to view applications"
+        });
+        return [];
+      }
       
+      console.log("[useApplications] Fetching applications for user:", userId);
       const { data, error } = await supabase
         .from("applications")
         .select("*")
@@ -33,6 +40,7 @@ export const useApplications = () => {
       return data as Application[];
     },
     enabled: !!userId,
+    retry: false, // Don't retry if there's an authentication issue
   });
 
   // Add a new application

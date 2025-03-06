@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { useToast } from '@/hooks/use-toast';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { restoreSession, verifySession, forceSessionRefresh, syncSessionState } from '@/lib/sessionPersistence';
 
 interface AuthContextType {
@@ -19,8 +20,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use the session from Supabase auth-helpers-react
+  const supabaseSession = useSession();
+  const supabaseClient = useSupabaseClient();
+  const [user, setUser] = useState<User | null>(supabaseSession?.user || null);
+  const [isLoading, setIsLoading] = useState(!supabaseSession);
   const { toast } = useToast();
 
   // Function to refresh the session
@@ -50,155 +54,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Initialize auth state and set up listeners
+  // Update our local user state when the Supabase session changes
   useEffect(() => {
-    console.log('[AuthContext] Initializing auth context');
-    let isMounted = true;
-    setIsLoading(true);
-    
-    // Function to retrieve and set the current session
-    const initializeAuth = async () => {
-      try {
-        // First, check if we have a session in localStorage directly
-        // Get the Supabase URL from environment variables instead of accessing the protected property
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-        const storageKey = 'sb-' + new URL(supabaseUrl).hostname.split('.')[0] + '-auth-token';
-        const storedSession = localStorage.getItem(storageKey);
-        
-        if (storedSession) {
-          console.log('[AuthContext] Found raw session in localStorage, will attempt to use it');
-        }
-        
-        // Try to get the current session
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('[AuthContext] Error getting initial session:', error.message);
-          // Don't return yet, try to restore the session
-        } else if (data?.session) {
-          console.log('[AuthContext] Initial session found:', data.session.user.id);
-          if (isMounted) {
-            setUser(data.session.user);
-            setIsLoading(false);
-            return; // Successfully got session, no need to continue
-          }
-        }
-        
-        console.log('[AuthContext] No initial session found or error occurred, trying to restore');
-        // Try to restore the session using our helper
-        const session = await restoreSession();
-        
-        if (session && isMounted) {
-          console.log('[AuthContext] Session restored successfully via helper');
-          setUser(session.user);
-        } else {
-          // Last attempt: force a session refresh
-          console.log('[AuthContext] No session from helper, trying force refresh');
-          const { user: refreshedUser, error: refreshError } = await forceSessionRefresh();
+    console.log('[AuthContext] Session from Supabase auth-helpers:', supabaseSession ? 'exists' : 'none');
+    if (supabaseSession) {
+      setUser(supabaseSession.user);
+      setIsLoading(false);
+    } else {
+      // If no session from auth-helpers, try to restore it
+      const initializeAuth = async () => {
+        try {
+          // Try to get the current session directly
+          const { data, error } = await supabaseClient.auth.getSession();
           
-          if (refreshError) {
-            console.error('[AuthContext] Force refresh failed:', refreshError.message);
-            if (isMounted) setUser(null);
-          } else if (refreshedUser && isMounted) {
-            console.log('[AuthContext] Session force-refreshed successfully');
-            setUser(refreshedUser);
-          } else if (isMounted) {
-            console.log('[AuthContext] No session could be restored after all attempts');
+          if (error) {
+            console.error('[AuthContext] Error getting initial session:', error.message);
+          } else if (data?.session) {
+            console.log('[AuthContext] Initial session found:', data.session.user.id);
+            setUser(data.session.user);
+          } else {
+            console.log('[AuthContext] No session found, user is not authenticated');
             setUser(null);
           }
-        }
-      } catch (error) {
-        console.error('[AuthContext] Error during auth initialization:', error);
-        if (isMounted) setUser(null);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    
-    // Initialize auth state
-    initializeAuth();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(`[AuthContext] Auth state changed: ${event}`, session ? `User ID: ${session.user.id}` : 'No session');
-      
-      if (!isMounted) return;
-      
-      // Always update loading state
-      setIsLoading(false);
-      
-      switch (event) {
-        case 'SIGNED_IN':
-          console.log('[AuthContext] User signed in');
-          setUser(session?.user ?? null);
-          break;
-          
-        case 'SIGNED_OUT':
-          console.log('[AuthContext] User signed out');
+        } catch (error) {
+          console.error('[AuthContext] Error during auth initialization:', error);
           setUser(null);
-          break;
-          
-        case 'TOKEN_REFRESHED':
-          console.log('[AuthContext] Token refreshed');
-          setUser(session?.user ?? null);
-          break;
-          
-        case 'USER_UPDATED':
-          console.log('[AuthContext] User updated');
-          setUser(session?.user ?? null);
-          break;
-          
-        case 'INITIAL_SESSION':
-          console.log('[AuthContext] Initial session detected');
-          if (session) {
-            console.log(`[AuthContext] Setting user from initial session: ${session.user.id}`);
-            setUser(session.user);
-          } else {
-            console.log('[AuthContext] No user in initial session');
-          }
-          break;
-          
-        default:
-          console.log(`[AuthContext] Unhandled auth event: ${event}`);
-          if (session) {
-            setUser(session.user);
-          }
-      }
-    });
-    
-    // Set up a periodic session check to ensure we stay logged in
-    const sessionCheckInterval = setInterval(async () => {
-      if (!user) return; // Don't check if no user is logged in
-      
-      console.log('[AuthContext] Performing periodic session check');
-      const isValid = await verifySession();
-      
-      if (!isValid && isMounted) {
-        console.warn('[AuthContext] Session invalid during periodic check, refreshing');
-        const refreshedUser = await syncSessionState();
-        
-        if (refreshedUser && isMounted) {
-          console.log('[AuthContext] Session refreshed during periodic check');
-          setUser(refreshedUser);
-        } else if (isMounted) {
-          console.error('[AuthContext] Session could not be refreshed during periodic check');
-          setUser(null);
+        } finally {
+          setIsLoading(false);
         }
-      }
-    }, 5 * 60 * 1000); // Check every 5 minutes
-
-    // Clean up subscription and interval on unmount
-    return () => {
-      console.log('[AuthContext] Cleaning up auth context');
-      isMounted = false;
-      subscription.unsubscribe();
-      clearInterval(sessionCheckInterval);
-    };
-  }, []);
+      };
+      
+      initializeAuth();
+    }
+  }, [supabaseSession, supabaseClient]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('[AuthContext] Attempting to log in with email and password');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -225,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('[AuthContext] Attempting to sign up with email and password');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

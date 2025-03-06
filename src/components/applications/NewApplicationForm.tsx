@@ -275,7 +275,7 @@ export function NewApplicationForm({
                 <FormItem>
                   <FormLabel>Company</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter company name" {...field} />
+                    <Input placeholder="Enter company name" autoComplete="organization" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -301,9 +301,9 @@ export function NewApplicationForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <div className="relative">
+                    <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                    <FormControl>
                       <Input
                         placeholder="Search or enter a location"
                         value={locationQuery}
@@ -313,13 +313,13 @@ export function NewApplicationForm({
                           field.onChange(e.target.value);
                         }}
                       />
-                      {isLoadingLocations && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    {isLoadingLocations && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                      </div>
+                    )}
+                  </div>
                   {locationQuery && locationSuggestions.length > 0 && (
                     <div className="mt-1 border rounded shadow-sm max-h-60 overflow-auto z-50">
                       {locationSuggestions.map(loc => (
@@ -348,13 +348,14 @@ export function NewApplicationForm({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel htmlFor="application-status">Status</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
+                    name="application-status"
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger id="application-status">
                         <SelectValue placeholder="Select application status" />
                       </SelectTrigger>
                     </FormControl>
@@ -414,11 +415,12 @@ export function NewApplicationForm({
               name="link"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Job Link (Optional)</FormLabel>
+                  <FormLabel htmlFor="job-link-input">Job Link (Optional)</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
+                        id="job-link-input"
                         placeholder="https://example.com/job" 
                         className="pl-10" 
                         {...field} 
