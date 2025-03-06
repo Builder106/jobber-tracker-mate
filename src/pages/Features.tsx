@@ -11,6 +11,11 @@ const Features = () => {
       icon: "📝",
     },
     {
+      title: "Browser Extension",
+      description: "Save job postings directly from popular job boards with a single click using our browser extension.",
+      icon: "🔌",
+    },
+    {
       title: "Calendar Integration",
       description: "Manage your interviews and follow-ups with our built-in calendar system.",
       icon: "📅",

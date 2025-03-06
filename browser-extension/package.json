@@ -1,0 +1,36 @@
+{
+  "name": "jobber-tracker-mate-extension",
+  "version": "1.0.0",
+  "description": "Browser extension for Jobber Tracker Mate to save job postings directly from job boards",
+  "private": true,
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js",
+    "dev": "webpack --watch --config webpack.config.js --mode=development",
+    "package": "npm run build && zip -r jobber-tracker-mate-extension.zip dist"
+  },
+  "keywords": [
+    "browser-extension",
+    "job-tracker",
+    "chrome-extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^6.10.0",
+    "html-webpack-plugin": "^5.6.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.3",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
