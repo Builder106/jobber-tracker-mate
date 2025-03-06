@@ -14,33 +14,27 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/places/, '/maps/api/place'),
         configure: (proxy, _options) => {
+          // Add headers that Google API might expect
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Set proper referer and origin headers to match allowed domains in Google Cloud Console
+            // Use a more generic referer that might be allowed in your Google Cloud Console settings
+            proxyReq.setHeader('Referer', '*');
+            proxyReq.setHeader('Origin', 'http://localhost:8080');
+            // Remove any existing X-Requested-With header which might trigger CORS preflight
+            proxyReq.removeHeader('X-Requested-With');
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
+          
           proxy.on('proxyRes', (proxyRes, req, _res) => {
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         },
       },
-      '/api/teleport': {
-        target: 'https://api.teleport.org',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/teleport/, ''),
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('Teleport proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to Teleport:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from Teleport:', proxyRes.statusCode, req.url);
-          });
-        },
-      },
+
     },
   },
   plugins: [

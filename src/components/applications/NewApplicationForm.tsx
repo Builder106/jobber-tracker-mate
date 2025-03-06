@@ -22,6 +22,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -83,6 +93,9 @@ export function NewApplicationForm({
       notes: "",
     },
   });
+  
+  // State for cancel confirmation dialog
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const [locationQuery, setLocationQuery] = React.useState(form.getValues("location") || "");
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -216,16 +229,17 @@ export function NewApplicationForm({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{existingApplication ? 'Edit Job Application' : 'Add New Job Application'}</DialogTitle>
-          <DialogDescription>
-            {existingApplication 
-              ? 'Update the details of your job application.' 
-              : 'Please fill out the details below to add a new job application record.'}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{existingApplication ? 'Edit Job Application' : 'Add New Job Application'}</DialogTitle>
+            <DialogDescription>
+              {existingApplication 
+                ? 'Update the details of your job application.' 
+                : 'Please fill out the details below to add a new job application record.'}
+            </DialogDescription>
+          </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -417,9 +431,7 @@ export function NewApplicationForm({
                 onClick={() => {
                   // Ask for confirmation if form has been filled out
                   if (Object.values(form.getValues()).some(val => val && val !== "")) {
-                    if (window.confirm("Are you sure you want to cancel? Your progress will be saved as a draft and can be resumed later.")) {
-                      onOpenChange(false);
-                    }
+                    setCancelDialogOpen(true);
                   } else {
                     onOpenChange(false);
                   }
@@ -435,7 +447,29 @@ export function NewApplicationForm({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress will be saved as a draft and can be resumed later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, continue editing</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setCancelDialogOpen(false);
+              onOpenChange(false);
+            }}>
+              Yes, cancel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
