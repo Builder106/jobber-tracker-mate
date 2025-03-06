@@ -166,11 +166,14 @@ export function NewApplicationForm({
     const subscription = form.watch((value) => {
       if (open && Object.values(value).some(val => val)) {
         try {
-          // Convert date to ISO string for storage
-          const dataToSave = {...value};
+          // Create a new object for storage to avoid type conflicts
+          const dataToSave: Record<string, any> = {...value};
+          
+          // Handle date conversion for JSON storage
           if (dataToSave.date) {
-            dataToSave.date = dataToSave.date.toISOString();
+            dataToSave.date = (dataToSave.date as Date).toISOString();
           }
+          
           localStorage.setItem('applicationDraft', JSON.stringify(dataToSave));
         } catch (error) {
           console.error('Error saving draft:', error);
@@ -189,7 +192,7 @@ export function NewApplicationForm({
         position: data.position,
         location: data.location,
         status: data.status,
-        date: format(data.date, 'MMMM d, yyyy'),
+        date: data.date.toISOString(), // Store as ISO string instead of formatted string
         link: data.link || undefined,
         notes: data.notes || undefined,
         updated_at: new Date().toISOString(),
@@ -206,7 +209,7 @@ export function NewApplicationForm({
         position: data.position,
         location: data.location,
         status: data.status,
-        date: format(data.date, 'MMMM d, yyyy'),
+        date: data.date.toISOString(),
         link: data.link || undefined,
         notes: data.notes || undefined,
         user_id: session?.user?.id,
