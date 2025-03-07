@@ -49,6 +49,10 @@ module.exports = {
           from: 'public/icons', 
           to: 'icons'
         },
+        {
+          from: 'public/favicon.ico',
+          to: 'favicon.ico'
+        },
         { 
           from: 'public', 
           to: '.',
