@@ -154,7 +154,7 @@ const Popup: React.FC = () => {
   return (
     <div className="container">
       <div className="header">
-        <img src="assets/icon48.png" alt="CareerChronos Logo" className="logo" />
+        <img src={chrome.runtime.getURL('icons/icon48.png')} alt="CareerChronos Logo" className="logo" />
         <h1>CareerChronos</h1>
       </div>
       
