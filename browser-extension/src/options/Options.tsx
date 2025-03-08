@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../shared/theme.css';
+import './options.css';
 
 interface SettingsState {
   apiUrl: string;
@@ -16,7 +17,7 @@ interface SettingsState {
     newJobs: boolean;
     applicationUpdates: boolean;
   };
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
 }
 
 const defaultSettings: SettingsState = {
@@ -34,29 +35,61 @@ const defaultSettings: SettingsState = {
     newJobs: true,
     applicationUpdates: true,
   },
-  theme: 'light',
+  theme: 'system',
 };
 
 const Options: React.FC = () => {
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
     // Load settings from storage
-    chrome.storage.local.get(['apiUrl', 'enabledSites', 'notifications', 'theme'], (result) => {
+    chrome.storage.local.get(['apiUrl', 'enabledSites', 'notifications', 'theme', 'lastSaved'], (result) => {
       setSettings({
         apiUrl: result.apiUrl || defaultSettings.apiUrl,
         enabledSites: result.enabledSites || defaultSettings.enabledSites,
         notifications: result.notifications || defaultSettings.notifications,
         theme: result.theme || defaultSettings.theme,
       });
+      
+      if (result.lastSaved) {
+        setLastSaved(new Date(result.lastSaved));
+      }
+      
       setIsLoading(false);
       
       // Apply theme
-      document.body.setAttribute('data-theme', result.theme || defaultSettings.theme);
+      applyTheme(result.theme || defaultSettings.theme);
     });
   }, []);
+  
+  const applyTheme = (themeSetting: 'light' | 'dark' | 'system') => {
+    let effectiveTheme: 'light' | 'dark';
+    
+    if (themeSetting === 'system') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } else {
+      effectiveTheme = themeSetting;
+    }
+    
+    document.body.setAttribute('data-theme', effectiveTheme);
+  };
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleThemeChange = () => {
+      if (settings.theme === 'system') {
+        applyTheme('system');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleThemeChange);
+  }, [settings.theme]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -84,12 +117,12 @@ const Options: React.FC = () => {
         }));
       }
     } else if (name === 'theme') {
-      const newTheme = value as 'light' | 'dark';
+      const newTheme = value as 'light' | 'dark' | 'system';
       setSettings((prev) => ({
         ...prev,
         theme: newTheme,
       }));
-      document.body.setAttribute('data-theme', newTheme);
+      applyTheme(newTheme);
     } else {
       // Handle text inputs
       setSettings((prev) => ({
@@ -111,8 +144,14 @@ const Options: React.FC = () => {
       return;
     }
 
-    // Save settings to storage
-    chrome.storage.local.set(settings, () => {
+    // Save settings to storage with timestamp
+    const saveData = {
+      ...settings,
+      lastSaved: new Date().toISOString()
+    };
+    
+    chrome.storage.local.set(saveData, () => {
+      setLastSaved(new Date());
       setStatusMessage({
         text: 'Settings saved successfully!',
         type: 'success',
@@ -126,11 +165,14 @@ const Options: React.FC = () => {
   };
 
   const handleReset = () => {
-    setSettings(defaultSettings);
-    setStatusMessage({
-      text: 'Settings reset to defaults. Click Save to apply changes.',
-      type: 'success',
-    });
+    if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
+      setSettings(defaultSettings);
+      applyTheme(defaultSettings.theme);
+      setStatusMessage({
+        text: 'Settings reset to defaults. Click Save to apply changes.',
+        type: 'info',
+      });
+    }
   };
 
   if (isLoading) {
@@ -151,7 +193,12 @@ const Options: React.FC = () => {
     });
     
     try {
-      const response = await fetch(`${settings.apiUrl}/health`);
+      const response = await fetch(`${settings.apiUrl}/health`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-cache'
+      });
+      
       if (response.ok) {
         setStatusMessage({
           text: 'Connection successful!',
@@ -168,7 +215,52 @@ const Options: React.FC = () => {
       });
     }
     
-    setTimeout(() => setStatusMessage(null), 3000);
+    setTimeout(() => setStatusMessage(null), 5000);
+  };
+  
+  const verifySettings = () => {
+    setStatusMessage({
+      text: 'Verifying settings and permissions...',
+      type: 'info',
+    });
+    
+    // Check storage access
+    chrome.storage.local.get(['test'], () => {
+      if (chrome.runtime.lastError) {
+        setStatusMessage({
+          text: `Storage access error: ${chrome.runtime.lastError.message}`,
+          type: 'error',
+        });
+        return;
+      }
+      
+      // Check notification permissions if enabled
+      if (settings.notifications.enabled) {
+        chrome.permissions.contains({ permissions: ['notifications'] }, (result) => {
+          if (!result) {
+            setStatusMessage({
+              text: 'Notification permission not granted. Some features may not work.',
+              type: 'error',
+            });
+            return;
+          }
+          
+          // All checks passed
+          setStatusMessage({
+            text: 'All settings and permissions verified successfully!',
+            type: 'success',
+          });
+          setTimeout(() => setStatusMessage(null), 3000);
+        });
+      } else {
+        // Skip notification check
+        setStatusMessage({
+          text: 'Settings verified successfully!',
+          type: 'success',
+        });
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    });
   };
 
   return (
@@ -184,6 +276,7 @@ const Options: React.FC = () => {
         >
           <option value="light">☀️ Light</option>
           <option value="dark">🌙 Dark</option>
+          <option value="system">⚙️ System</option>
         </select>
       </div>
 
@@ -271,7 +364,7 @@ const Options: React.FC = () => {
         <h2>🌐 Supported Job Sites</h2>
         <p className="help-text">Enable or disable job detection for specific sites</p>
         
-        <div className="form-group">
+        <div className="form-group site-grid">
           <div className="checkbox-group">
             <input
               type="checkbox"
@@ -342,6 +435,31 @@ const Options: React.FC = () => {
             </label>
           </div>
         </div>
+      </div>
+      
+      <div className="section">
+        <h2>🔍 Settings Verification</h2>
+        <div className="settings-status">
+          <div className="status-item">
+            <span>API URL:</span>
+            <span className={settings.apiUrl ? "status-ok" : "status-error"}>
+              {settings.apiUrl ? "✓ Set" : "✗ Missing"}
+            </span>
+          </div>
+          <div className="status-item">
+            <span>Job Sites Enabled:</span>
+            <span className={Object.values(settings.enabledSites).some(v => v) ? "status-ok" : "status-warning"}>
+              {Object.values(settings.enabledSites).filter(v => v).length} of 5
+            </span>
+          </div>
+          <div className="status-item">
+            <span>Last Saved:</span>
+            <span>{lastSaved ? lastSaved.toLocaleString() : "Never"}</span>
+          </div>
+        </div>
+        <button className="secondary-button verification-btn" onClick={verifySettings}>
+          Verify Configuration
+        </button>
       </div>
 
       {statusMessage && (
