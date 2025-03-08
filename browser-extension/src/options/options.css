@@ -80,6 +80,7 @@ h1 {
   font-weight: 700;
   background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.05);
 }
@@ -203,4 +204,5 @@ select.select-input:focus {
 
 /* Toggle switch styling */
 .switch {
-  position:
+  position: relative;
+}
