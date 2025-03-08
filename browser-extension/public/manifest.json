@@ -20,8 +20,10 @@
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "notifications"
   ],
+  "offline_enabled": true,
   "host_permissions": [
     "http://localhost:8080/*"
   ],
@@ -32,7 +34,11 @@
         "https://www.indeed.com/viewjob*",
         "https://www.glassdoor.com/job-listing/*",
         "https://www.monster.com/job-detail/*",
-        "https://www.ziprecruiter.com/jobs/*"
+        "https://www.ziprecruiter.com/jobs/*",
+        "https://boards.greenhouse.io/*/jobs/*",
+        "https://jobs.lever.co/*/",
+        "https://careers.google.com/jobs/*",
+        "https://www.amazon.jobs/*/jobs/*"
       ],
       "js": ["content.js"]
     }
