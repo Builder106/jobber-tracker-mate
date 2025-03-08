@@ -41,22 +41,16 @@ const Options: React.FC = () => {
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
 
   useEffect(() => {
     // Load settings from storage
-    chrome.storage.local.get(['apiUrl', 'enabledSites', 'notifications', 'theme', 'user'], (result) => {
+    chrome.storage.local.get(['apiUrl', 'enabledSites', 'notifications', 'theme'], (result) => {
       setSettings({
         apiUrl: result.apiUrl || defaultSettings.apiUrl,
         enabledSites: result.enabledSites || defaultSettings.enabledSites,
         notifications: result.notifications || defaultSettings.notifications,
         theme: result.theme || defaultSettings.theme,
       });
-      
-      if (result.user) {
-        setUser(result.user);
-      }
-      
       setIsLoading(false);
       
       // Apply theme
@@ -68,7 +62,41 @@ const Options: React.FC = () => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
-    // ... keep existing code (the input handling logic)
+    if (type === 'checkbox') {
+      if (name.startsWith('notification-')) {
+        const notificationKey = name.replace('notification-', '') as keyof typeof settings.notifications;
+        setSettings((prev) => ({
+          ...prev,
+          notifications: {
+            ...prev.notifications,
+            [notificationKey]: checked,
+          },
+        }));
+      } else {
+        // Handle site checkboxes
+        const siteName = name.replace('site-', '') as keyof typeof settings.enabledSites;
+        setSettings((prev) => ({
+          ...prev,
+          enabledSites: {
+            ...prev.enabledSites,
+            [siteName]: checked,
+          },
+        }));
+      }
+    } else if (name === 'theme') {
+      const newTheme = value as 'light' | 'dark';
+      setSettings((prev) => ({
+        ...prev,
+        theme: newTheme,
+      }));
+      document.body.setAttribute('data-theme', newTheme);
+    } else {
+      // Handle text inputs
+      setSettings((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSave = () => {
@@ -98,26 +126,11 @@ const Options: React.FC = () => {
   };
 
   const handleReset = () => {
-    // ... keep existing code (the reset functionality)
-  };
-
-  const handleLogout = () => {
-    // Remove user and token from storage
-    chrome.storage.local.remove(['user', 'token'], () => {
-      setUser(null);
-      setStatusMessage({
-        text: 'You have been signed out',
-        type: 'success',
-      });
-      
-      setTimeout(() => {
-        setStatusMessage(null);
-      }, 3000);
+    setSettings(defaultSettings);
+    setStatusMessage({
+      text: 'Settings reset to defaults. Click Save to apply changes.',
+      type: 'success',
     });
-  };
-
-  const testApiConnection = async () => {
-    // ... keep existing code (the API connection test)
   };
 
   if (isLoading) {
@@ -131,13 +144,38 @@ const Options: React.FC = () => {
     );
   }
 
+  const testApiConnection = async () => {
+    setStatusMessage({
+      text: 'Testing connection...',
+      type: 'info',
+    });
+    
+    try {
+      const response = await fetch(`${settings.apiUrl}/health`);
+      if (response.ok) {
+        setStatusMessage({
+          text: 'Connection successful!',
+          type: 'success',
+        });
+      } else {
+        throw new Error(`HTTP ${response.status}`);  
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setStatusMessage({
+        text: `Connection failed: ${errorMessage}`,
+        type: 'error',
+      });
+    }
+    
+    setTimeout(() => setStatusMessage(null), 3000);
+  };
+
   return (
     <div className="container">
       <div className="header">
-        <div className="header-left">
-          <img src={chrome.runtime.getURL('icons/icon48.png')} alt="CareerChronos Logo" className="logo" />
-          <h1>CareerChronos Settings</h1>
-        </div>
+        <img src={chrome.runtime.getURL('icons/icon48.png')} alt="CareerChronos Logo" className="logo" />
+        <h1>CareerChronos Settings</h1>
         <select
           name="theme"
           value={settings.theme}
@@ -148,26 +186,6 @@ const Options: React.FC = () => {
           <option value="dark">🌙 Dark</option>
         </select>
       </div>
-
-      {user && (
-        <div className="section account-section">
-          <h2>👤 Account</h2>
-          <div className="account-info">
-            <div className="user-profile">
-              <div className="avatar">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-details">
-                <p className="user-name">{user.name}</p>
-                <p className="user-email">{user.email}</p>
-              </div>
-            </div>
-            <button onClick={handleLogout} className="secondary-button">
-              <span className="icon">🚪</span> Sign Out
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="section">
         <h2>🔗 API Configuration</h2>
@@ -253,8 +271,8 @@ const Options: React.FC = () => {
         <h2>🌐 Supported Job Sites</h2>
         <p className="help-text">Enable or disable job detection for specific sites</p>
         
-        <div className="sites-grid">
-          <div className="checkbox-group site-checkbox">
+        <div className="form-group">
+          <div className="checkbox-group">
             <input
               type="checkbox"
               id="site-linkedin"
@@ -263,13 +281,12 @@ const Options: React.FC = () => {
               onChange={handleInputChange}
             />
             <label htmlFor="site-linkedin">
-              <span className="site-icon linkedin">in</span>
               LinkedIn
               {settings.enabledSites.linkedin && <span className="badge badge-success">Active</span>}
             </label>
           </div>
           
-          <div className="checkbox-group site-checkbox">
+          <div className="checkbox-group">
             <input
               type="checkbox"
               id="site-indeed"
@@ -278,13 +295,12 @@ const Options: React.FC = () => {
               onChange={handleInputChange}
             />
             <label htmlFor="site-indeed">
-              <span className="site-icon indeed">In</span>
               Indeed
               {settings.enabledSites.indeed && <span className="badge badge-success">Active</span>}
             </label>
           </div>
           
-          <div className="checkbox-group site-checkbox">
+          <div className="checkbox-group">
             <input
               type="checkbox"
               id="site-glassdoor"
@@ -293,13 +309,12 @@ const Options: React.FC = () => {
               onChange={handleInputChange}
             />
             <label htmlFor="site-glassdoor">
-              <span className="site-icon glassdoor">G</span>
               Glassdoor
               {settings.enabledSites.glassdoor && <span className="badge badge-success">Active</span>}
             </label>
           </div>
           
-          <div className="checkbox-group site-checkbox">
+          <div className="checkbox-group">
             <input
               type="checkbox"
               id="site-monster"
@@ -308,13 +323,12 @@ const Options: React.FC = () => {
               onChange={handleInputChange}
             />
             <label htmlFor="site-monster">
-              <span className="site-icon monster">M</span>
               Monster
               {settings.enabledSites.monster && <span className="badge badge-success">Active</span>}
             </label>
           </div>
           
-          <div className="checkbox-group site-checkbox">
+          <div className="checkbox-group">
             <input
               type="checkbox"
               id="site-ziprecruiter"
@@ -323,7 +337,6 @@ const Options: React.FC = () => {
               onChange={handleInputChange}
             />
             <label htmlFor="site-ziprecruiter">
-              <span className="site-icon ziprecruiter">Z</span>
               ZipRecruiter
               {settings.enabledSites.ziprecruiter && <span className="badge badge-success">Active</span>}
             </label>
@@ -340,10 +353,10 @@ const Options: React.FC = () => {
 
       <div className="button-group">
         <button className="secondary-button" onClick={handleReset}>
-          <span className="icon">↺</span> Reset to Defaults
+          ↺ Reset to Defaults
         </button>
         <button className="primary-button" onClick={handleSave}>
-          <span className="icon">💾</span> Save Settings
+          💾 Save Settings
         </button>
       </div>
 

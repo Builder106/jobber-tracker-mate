@@ -11,7 +11,13 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+    "noImplicitAny": true,
+    "strictNullChecks": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
