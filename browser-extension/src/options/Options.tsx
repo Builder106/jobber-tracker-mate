@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings, Bell, Globe, Server, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import '../shared/theme.css';
 import './options.css';
 
@@ -40,12 +48,11 @@ const defaultSettings: SettingsState = {
 
 const Options: React.FC = () => {
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Load settings from storage
     chrome.storage.local.get(['apiUrl', 'enabledSites', 'notifications', 'theme', 'lastSaved'], (result) => {
       setSettings({
         apiUrl: result.apiUrl || defaultSettings.apiUrl,
@@ -60,7 +67,6 @@ const Options: React.FC = () => {
       
       setIsLoading(false);
       
-      // Apply theme
       applyTheme(result.theme || defaultSettings.theme);
     });
   }, []);
@@ -77,7 +83,6 @@ const Options: React.FC = () => {
     document.body.setAttribute('data-theme', effectiveTheme);
   };
 
-  // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
@@ -106,7 +111,6 @@ const Options: React.FC = () => {
           },
         }));
       } else {
-        // Handle site checkboxes
         const siteName = name.replace('site-', '') as keyof typeof settings.enabledSites;
         setSettings((prev) => ({
           ...prev,
@@ -124,7 +128,6 @@ const Options: React.FC = () => {
       }));
       applyTheme(newTheme);
     } else {
-      // Handle text inputs
       setSettings((prev) => ({
         ...prev,
         [name]: value,
@@ -133,63 +136,45 @@ const Options: React.FC = () => {
   };
 
   const handleSave = () => {
-    // Validate API URL
     try {
       new URL(settings.apiUrl);
-    } catch (e) {
-      setStatusMessage({
-        text: 'Please enter a valid API URL',
-        type: 'error',
-      });
-      return;
-    }
-
-    // Save settings to storage with timestamp
-    const saveData = {
-      ...settings,
-      lastSaved: new Date().toISOString()
-    };
-    
-    chrome.storage.local.set(saveData, () => {
-      setLastSaved(new Date());
-      setStatusMessage({
-        text: 'Settings saved successfully!',
-        type: 'success',
-      });
       
-      // Clear status message after 3 seconds
-      setTimeout(() => {
-        setStatusMessage(null);
-      }, 3000);
-    });
+      chrome.storage.local.set({
+        ...settings,
+        lastSaved: new Date().toISOString()
+      }, () => {
+        setLastSaved(new Date());
+        toast({
+          title: "Settings saved",
+          description: "Your settings have been saved successfully.",
+          duration: 3000,
+        });
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Invalid API URL",
+        description: "Please enter a valid API URL",
+        duration: 4000,
+      });
+    }
   };
 
   const handleReset = () => {
     if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
       setSettings(defaultSettings);
-      applyTheme(defaultSettings.theme);
-      setStatusMessage({
-        text: 'Settings reset to defaults. Click Save to apply changes.',
-        type: 'info',
+      toast({
+        title: "Settings reset",
+        description: "Settings have been reset to defaults. Click Save to apply changes.",
+        duration: 4000,
       });
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading your settings...</p>
-        </div>
-      </div>
-    );
-  }
-
   const testApiConnection = async () => {
-    setStatusMessage({
-      text: 'Testing connection...',
-      type: 'info',
+    toast({
+      title: "Testing connection...",
+      description: "Checking API connection...",
     });
     
     try {
@@ -200,289 +185,189 @@ const Options: React.FC = () => {
       });
       
       if (response.ok) {
-        setStatusMessage({
-          text: 'Connection successful!',
-          type: 'success',
+        toast({
+          title: "Connection successful",
+          description: "Successfully connected to the API.",
+          duration: 3000,
         });
       } else {
-        throw new Error(`HTTP ${response.status}`);  
+        throw new Error(`HTTP ${response.status}`);
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setStatusMessage({
-        text: `Connection failed: ${errorMessage}`,
-        type: 'error',
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Connection failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        duration: 4000,
       });
     }
-    
-    setTimeout(() => setStatusMessage(null), 5000);
   };
-  
-  const verifySettings = () => {
-    setStatusMessage({
-      text: 'Verifying settings and permissions...',
-      type: 'info',
-    });
-    
-    // Check storage access
-    chrome.storage.local.get(['test'], () => {
-      if (chrome.runtime.lastError) {
-        setStatusMessage({
-          text: `Storage access error: ${chrome.runtime.lastError.message}`,
-          type: 'error',
-        });
-        return;
-      }
-      
-      // Check notification permissions if enabled
-      if (settings.notifications.enabled) {
-        chrome.permissions.contains({ permissions: ['notifications'] }, (result) => {
-          if (!result) {
-            setStatusMessage({
-              text: 'Notification permission not granted. Some features may not work.',
-              type: 'error',
-            });
-            return;
-          }
-          
-          // All checks passed
-          setStatusMessage({
-            text: 'All settings and permissions verified successfully!',
-            type: 'success',
-          });
-          setTimeout(() => setStatusMessage(null), 3000);
-        });
-      } else {
-        // Skip notification check
-        setStatusMessage({
-          text: 'Settings verified successfully!',
-          type: 'success',
-        });
-        setTimeout(() => setStatusMessage(null), 3000);
-      }
-    });
-  };
+
+  if (isLoading) {
+    return (
+      <div className="container flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Loading your settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
-      <div className="header">
-        <img src={chrome.runtime.getURL('icons/icon48.png')} alt="CareerChronos Logo" className="logo" />
-        <h1>CareerChronos Settings</h1>
-        <select
-          name="theme"
-          value={settings.theme}
-          onChange={handleInputChange}
-          className="theme-selector"
-        >
-          <option value="light">☀️ Light</option>
-          <option value="dark">🌙 Dark</option>
-          <option value="system">⚙️ System</option>
-        </select>
-      </div>
-
-      <div className="section">
-        <h2>🔗 API Configuration</h2>
-        <div className="form-group">
-          <label htmlFor="apiUrl">API URL</label>
-          <div className="input-group">
-            <input
-              type="url"
-              id="apiUrl"
-              name="apiUrl"
-              value={settings.apiUrl}
-              onChange={handleInputChange}
-              placeholder="https://your-careerchronos-api.com"
-            />
-            <button
-              type="button"
-              onClick={testApiConnection}
-              className="test-connection-btn"
-            >
-              Test Connection
-            </button>
-          </div>
-          <p className="help-text">The URL of your CareerChronos API server</p>
+    <div className="container max-w-4xl mx-auto p-6">
+      <div className="flex items-center gap-4 mb-8">
+        <img src={chrome.runtime.getURL('icons/icon48.png')} alt="CareerClutch Logo" className="w-12 h-12" />
+        <div>
+          <h1 className="text-2xl font-bold">CareerClutch Settings</h1>
+          <p className="text-muted-foreground">Customize your job search experience</p>
         </div>
       </div>
 
-      <div className="section">
-        <h2>🔔 Notifications</h2>
-        <div className="form-group">
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="notification-enabled"
-              name="notification-enabled"
-              checked={settings.notifications.enabled}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="notification-enabled">
-              Enable Notifications
-              {settings.notifications.enabled && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="general">
+            <Settings className="w-4 h-4 mr-2" />
+            General
+          </TabsTrigger>
+          <TabsTrigger value="integrations">
+            <Server className="w-4 h-4 mr-2" />
+            API Settings
+          </TabsTrigger>
+          <TabsTrigger value="sites">
+            <Globe className="w-4 h-4 mr-2" />
+            Job Sites
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="checkbox-group" style={{ marginLeft: '1.5rem', opacity: settings.notifications.enabled ? 1 : 0.5 }}>
-            <input
-              type="checkbox"
-              id="notification-sound"
-              name="notification-sound"
-              checked={settings.notifications.sound}
-              onChange={handleInputChange}
-              disabled={!settings.notifications.enabled}
-            />
-            <label htmlFor="notification-sound">Play Sound</label>
-          </div>
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Settings</CardTitle>
+              <CardDescription>Configure how you want to be notified about job updates</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="notifications-toggle">Enable Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Receive updates about new jobs and applications</p>
+                </div>
+                <Switch
+                  id="notifications-toggle"
+                  checked={settings.notifications.enabled}
+                  onCheckedChange={(checked) => 
+                    setSettings(prev => ({
+                      ...prev,
+                      notifications: { ...prev.notifications, enabled: checked }
+                    }))
+                  }
+                />
+              </div>
 
-          <div className="checkbox-group" style={{ marginLeft: '1.5rem', opacity: settings.notifications.enabled ? 1 : 0.5 }}>
-            <input
-              type="checkbox"
-              id="notification-newJobs"
-              name="notification-newJobs"
-              checked={settings.notifications.newJobs}
-              onChange={handleInputChange}
-              disabled={!settings.notifications.enabled}
-            />
-            <label htmlFor="notification-newJobs">New Job Matches</label>
-          </div>
+              <div className="space-y-4 pl-6">
+                {Object.entries({
+                  sound: "Play notification sounds",
+                  newJobs: "New job matches",
+                  applicationUpdates: "Application status updates"
+                }).map(([key, label]) => (
+                  <div key={key} className="flex items-center space-x-2">
+                    <Switch
+                      id={`notification-${key}`}
+                      disabled={!settings.notifications.enabled}
+                      checked={settings.notifications[key as keyof typeof settings.notifications]}
+                      onCheckedChange={(checked) =>
+                        setSettings(prev => ({
+                          ...prev,
+                          notifications: { ...prev.notifications, [key]: checked }
+                        }))
+                      }
+                    />
+                    <Label htmlFor={`notification-${key}`}>{label}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="checkbox-group" style={{ marginLeft: '1.5rem', opacity: settings.notifications.enabled ? 1 : 0.5 }}>
-            <input
-              type="checkbox"
-              id="notification-applicationUpdates"
-              name="notification-applicationUpdates"
-              checked={settings.notifications.applicationUpdates}
-              onChange={handleInputChange}
-              disabled={!settings.notifications.enabled}
-            />
-            <label htmlFor="notification-applicationUpdates">Application Updates</label>
-          </div>
-        </div>
+        <TabsContent value="integrations">
+          <Card>
+            <CardHeader>
+              <CardTitle>API Configuration</CardTitle>
+              <CardDescription>Connect to your CareerClutch backend API</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="api-url">API URL</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="api-url"
+                    placeholder="https://api.careerclutch.com"
+                    value={settings.apiUrl}
+                    onChange={(e) => setSettings(prev => ({ ...prev, apiUrl: e.target.value }))}
+                  />
+                  <Button variant="outline" onClick={testApiConnection}>
+                    Test
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  The URL where your CareerClutch API is hosted
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sites">
+          <Card>
+            <CardHeader>
+              <CardTitle>Supported Job Sites</CardTitle>
+              <CardDescription>Enable or disable job detection for specific sites</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.enabledSites).map(([site, enabled]) => (
+                  <div key={site} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="space-y-0.5">
+                      <Label htmlFor={`site-${site}`} className="capitalize">{site}</Label>
+                      {enabled && (
+                        <p className="text-xs text-muted-foreground flex items-center">
+                          <CheckCircle2 className="w-3 h-3 mr-1 text-green-500" />
+                          Active
+                        </p>
+                      )}
+                    </div>
+                    <Switch
+                      id={`site-${site}`}
+                      checked={enabled}
+                      onCheckedChange={(checked) =>
+                        setSettings(prev => ({
+                          ...prev,
+                          enabledSites: { ...prev.enabledSites, [site]: checked }
+                        }))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex justify-between mt-8">
+        <Button variant="outline" onClick={handleReset}>
+          Reset to Defaults
+        </Button>
+        <Button onClick={handleSave}>
+          Save Changes
+        </Button>
       </div>
 
-      <div className="section">
-        <h2>🌐 Supported Job Sites</h2>
-        <p className="help-text">Enable or disable job detection for specific sites</p>
-        
-        <div className="form-group site-grid">
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="site-linkedin"
-              name="site-linkedin"
-              checked={settings.enabledSites.linkedin}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="site-linkedin">
-              LinkedIn
-              {settings.enabledSites.linkedin && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
-          
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="site-indeed"
-              name="site-indeed"
-              checked={settings.enabledSites.indeed}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="site-indeed">
-              Indeed
-              {settings.enabledSites.indeed && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
-          
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="site-glassdoor"
-              name="site-glassdoor"
-              checked={settings.enabledSites.glassdoor}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="site-glassdoor">
-              Glassdoor
-              {settings.enabledSites.glassdoor && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
-          
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="site-monster"
-              name="site-monster"
-              checked={settings.enabledSites.monster}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="site-monster">
-              Monster
-              {settings.enabledSites.monster && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
-          
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="site-ziprecruiter"
-              name="site-ziprecruiter"
-              checked={settings.enabledSites.ziprecruiter}
-              onChange={handleInputChange}
-            />
-            <label htmlFor="site-ziprecruiter">
-              ZipRecruiter
-              {settings.enabledSites.ziprecruiter && <span className="badge badge-success">Active</span>}
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      <div className="section">
-        <h2>🔍 Settings Verification</h2>
-        <div className="settings-status">
-          <div className="status-item">
-            <span>API URL:</span>
-            <span className={settings.apiUrl ? "status-ok" : "status-error"}>
-              {settings.apiUrl ? "✓ Set" : "✗ Missing"}
-            </span>
-          </div>
-          <div className="status-item">
-            <span>Job Sites Enabled:</span>
-            <span className={Object.values(settings.enabledSites).some(v => v) ? "status-ok" : "status-warning"}>
-              {Object.values(settings.enabledSites).filter(v => v).length} of 5
-            </span>
-          </div>
-          <div className="status-item">
-            <span>Last Saved:</span>
-            <span>{lastSaved ? lastSaved.toLocaleString() : "Never"}</span>
-          </div>
-        </div>
-        <button className="secondary-button verification-btn" onClick={verifySettings}>
-          Verify Configuration
-        </button>
-      </div>
-
-      {statusMessage && (
-        <div className={`status-message ${statusMessage.type}`}>
-          {statusMessage.type === 'success' ? '✅ ' : statusMessage.type === 'info' ? 'ℹ️ ' : '❌ '}
-          {statusMessage.text}
-        </div>
-      )}
-
-      <div className="button-group">
-        <button className="secondary-button" onClick={handleReset}>
-          ↺ Reset to Defaults
-        </button>
-        <button className="primary-button" onClick={handleSave}>
-          💾 Save Settings
-        </button>
-      </div>
-
-      <div className="footer">
-        <p>CareerChronos Browser Extension</p>
-        <p className="version">Version 1.0.0</p>
-        <p><a href="https://github.com/your-username/career-chronos" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
-      </div>
+      <footer className="mt-12 text-center text-sm text-muted-foreground">
+        <p>CareerClutch Browser Extension</p>
+        <p className="mt-1">Version 1.0.0</p>
+      </footer>
     </div>
   );
 };
